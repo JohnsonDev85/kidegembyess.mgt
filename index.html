@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="./style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mfumo wa Usimamizi wa Miradi Kidegembye SS</title>
+  </head>
+  <body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background-image:url('https://github.com/JohnsonDev85/Photos/blob/main/PXL_20260322_112632172.PORTRAIT~2.jpg?raw=true'); background-size:cover;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:rgba(27,58,63,0.82);padding:40px;border-radius:12px;text-align:center;width:300px;">
+    <h2 style="color:whitesmoke;margin-bottom:10px; font-size: 1.8rem;"> Kidegembye SS Management Portal</h2>
+    <p style="color:orange;margin-bottom:20px;">Ingiza password yako</p>
+    <input type="password" id="loginPassword" placeholder="Password..." 
+      style="width:100%;padding:12px;border:2px solid #ddd;border-radius:8px;font-size:16px;margin-bottom:15px;box-sizing:border-box;">
+    <button onclick="checkLogin()" 
+      style="width:100%;padding:12px;background:#e67e22;color:white;border:none;border-radius:8px;font-size:16px;cursor:pointer;">
+      Login →
+    </button>
+  </div>
+  <footer>
+    <p>&copy; 2026 JohnsonDev85. All rights reserved!</p>
+    <p>This Kidegembye SS Management Portal System is Built by JohnsonDev85.</p>
+    <p>Email: <a id="email" href="mailto:jyona0607@gmail.com">jyona0607@gmail.com</a></p>   
+  </footer>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" style="display:none;">
+
+<header>
+    <h1>Kidegembye Secondary School</h1>
+    <div class="user-controls" style="display:flex; align-items:center; gap:15px;">
+        <div id="notifBellWrapper" style="position:relative; display:none;">
+            <button onclick="toggleNotifPanel()" style="background:none; border:none; cursor:pointer; font-size:22px; color:white; position:relative;">
+                
+                <span id="notifBadge" style="display:none; position:absolute; top:-5px; right:-8px; background:#e74c3c; color:white; font-size:11px; font-weight:bold; border-radius:50%; width:18px; height:18px; align-items:center; justify-content:center;"></span>
+            </button>
+            <div id="notifPanel" style="display:none; position:absolute; top:35px; right:0; width:300px; max-height:350px; overflow-y:auto; background:white; color:#333; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.25); z-index:9998;">
+                <div style="padding:10px 15px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="font-size:14px;">New Data</strong>
+                    <button onclick="clearNotifications()" style="border:none; background:none; color:#e67e22; font-size:12px; cursor:pointer;">Delete All</button>
+                </div>
+                <div id="notifList" style="padding:5px;"></div>
+            </div>
+        </div>
+        <span id="userLabel" style="font-weight:bold;color:white;"></span>
+        <button onclick="logout()" style="margin-left:15px;padding:6px 14px;background:#e74c3c;color:white;border:none;border-radius:6px;cursor:pointer;">Logout</button>
+    </div>
+</header>
+
+<select id="roleSelect" style="display:none;" onchange="switchRole()">
+    <option value="manager">Supervisor</option>
+    <option value="admin">Head Of Department</option>
+    <option value="accountant">Mhasibu </option>
+    <option value="hos">Head of School</option>
+    <option value="hostelmanager">Msimamizi wa Hostel</option>
+</select>
+
+<div class="container">
+
+    <!-- ================= ADMIN VIEW (HoD) ================= -->
+    <div id="adminView" style="display:none;">
+        
+        <div class="settings-section">
+            <h3 style="color: var(--primary-color); margin-bottom: 10px;">Set Supervisors</h3>
+            <form id="supervisorForm" onsubmit="saveSupervisors(event)">
+                <div class="form-grid">
+                    <div class="form-group"><label>Msimamizi wa Maziwa</label><input type="text" id="set-msimamizi-maziwa" required></div>
+                    <div class="form-group"><label>Msimamizi wa Saloon</label><input type="text" id="set-msimamizi-saloon" required></div>
+                    <div class="form-group"><label>Msimamizi wa Mgahawa</label><input type="text" id="set-msimamizi-mgahawa" required></div>
+                    <div class="form-group"><label>Msimamizi wa Duka</label><input type="text" id="set-msimamizi-duka" required></div>
+                </div>
+                <button type="submit" class="btn-submit" style="background-color: var(--primary-color);">Save Supervisors</button>
+            </form>
+        </div>
+
+        <div class="table-section">
+            <h3 style="color: var(--warning-color); margin-bottom: 10px;">Maombi ya Matumizi Yanayosubiri Uidhinishaji</h3>
+            <div class="data-table-container">
+                <table>
+                    <thead>
+                        <tr><th>Tarehe</th><th>Mradi</th><th>Msimamizi</th><th>Maelezo ya Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="table-pending-requests"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <h2 class="section-title">Summary ya Faida</h2>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="changePeriod('day', this)">Per Day</button>
+            <button class="tab-btn" onclick="changePeriod('week', this)">Per Week</button>
+            <button class="tab-btn" onclick="changePeriod('month', this)">Per Month</button>
+        </div>
+
+        <div class="grid-summary">
+            <div class="card maziwa"><h3>Mauzo Ya Maziwa</h3><div class="amount" id="profit-maziwa">0 TZS</div></div>
+            <div class="card saloon"><h3>Saloon</h3><div class="amount" id="profit-saloon">0 TZS</div></div>
+            <div class="card mgahawa"><h3>Mgahawa</h3><div class="amount" id="profit-mgahawa">0 TZS</div></div>
+            <div class="card duka"><h3>Duka</h3><div class="amount" id="profit-duka">0 TZS</div></div>
+        </div>
+
+        <div class="table-section">
+            <h3 style="color: var(--primary-color);">Ripoti ya Matumizi Yaliyoidhinishwa</h3>
+            <div class="data-table-container">
+                <table>
+                    <thead>
+                        <tr><th>Tarehe</th><th>Idara</th><th>Matumizi Yaliyokubaliwa</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                    </thead>
+                    <tbody id="table-admin-expenses"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-section">
+            <h2 class="section-title">Ripoti ya Rekodi za Section Zote</h2>
+            
+            <h3>1. Maziwa</h3>
+            <div class="data-table-container">
+                <table>
+                    <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Yaliyokamuliwa (Ltr)</th><th>Yaliyouzwa (Ltr)</th><th>Yaliyobaki (Ltr)</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
+                    <tbody id="table-maziwa"></tbody>
+                </table>
+            </div>
+
+            <h3>2. Saloon</h3>
+            <div class="data-table-container">
+                <table>
+                    <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Watu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
+                    <tbody id="table-saloon"></tbody>
+                </table>
+            </div>
+
+            <h3>3. Mgahawa</h3>
+            <div class="data-table-container">
+                <table>
+                    <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Vitu Vilivyonunuliwa</th><th>Gharama ya Vitu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
+                    <tbody id="table-mgahawa"></tbody>
+                </table>
+            </div>
+
+            <h3>4. Duka</h3>
+            <div class="data-table-container">
+                <table>
+                    <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Bidhaa Zilizonunuliwa</th><th>Gharama ya Bidhaa</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
+                    <tbody id="table-duka"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ACCOUNTANT DASHBOARD ================= -->
+    <div id="accountantDashboard" style="display: none;">
+        <h2 class="section-title"> TAARIFA ZA FEDHA </h2>
+
+        <div class="tabs" style="margin-bottom:20px;">
+            <button class="tab-btn active" id="accTabMiradi" onclick="switchAccTab('miradi')"> Miradi</button>
+            <button class="tab-btn" id="accTabHostel" onclick="switchAccTab('hostel')"> Hostel</button>
+        </div>
+
+        <div id="accMiradiSection">
+            <!-- Muhtasari wa Salio la Kila Mradi -->
+            <div class="grid-summary" style="margin-bottom: 25px;">
+                <div class="card maziwa" style="border-left: 5px solid #1abc9c;">
+                    <h3 style="color: #1abc9c;">Salio la Maziwa</h3>
+                    <div class="amount" id="accBalanceMaziwa" style="color: #2c3e50;">0 TZS</div>
+                </div>
+                <div class="card saloon" style="border-left: 5px solid #3498db;">
+                    <h3 style="color: #3498db;">Salio la Saloon</h3>
+                    <div class="amount" id="accBalanceSaloon" style="color: #2c3e50;">0 TZS</div>
+                </div>
+                <div class="card mgahawa" style="border-left: 5px solid #9b59b6;">
+                    <h3 style="color: #9b59b6;">Salio la Mgahawa</h3>
+                    <div class="amount" id="accBalanceMgahawa" style="color: #2c3e50;">0 TZS</div>
+                </div>
+                <div class="card duka" style="border-left: 5px solid #e67e22;">
+                    <h3 style="color: #e67e22;">Salio la Duka</h3>
+                    <div class="amount" id="accBalanceDuka" style="color: #2c3e50;">0 TZS</div>
+                </div>
+                <div class="card" style="border-left: 5px solid #27ae60; background: #f4fbf7; grid-column: 1 / -1;">
+                    <h3 style="color: #27ae60; font-size: 1.1rem;">JUMLA KUU YA FEDHA </h3>
+                    <div class="amount" id="accTotalBalance" style="color: #27ae60; font-size: 2rem; font-weight: bold;">0 TZS</div>
+                </div>
+            </div>
+
+            <!-- Makusanyo yanayosubiri uthibitisho -->
+            <div class="table-section" style="margin-bottom: 25px;">
+                <h3 style="color: var(--primary-color);">Mapato (Kutoka kwa Supervisor) Yanayosubiri Uthibitisho </h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tarehe</th>
+                                <th>Mradi/Section</th>
+                                <th>Kiasi Kilichotumwa (TZS)</th>
+                                <th>Maelezo ya Ziada</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountantPendingCollectionsTable">
+                            <!-- Data zitajazwa na JS kutoka Firebase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Matumizi yanayosubiri kutolewa hela -->
+            <div class="table-section" style="margin-bottom: 25px;">
+                <h3 style="color: var(--warning-color);">Maombi ya Matumizi Yanayosubiri Kutolewa Fedha (Yaliyopitishwa na HoD)</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Tarehe</th>
+                                <th>Section / Mradi</th>
+                                <th>Aina ya Matumizi</th>
+                                <th>Kiasi Kinachotakiwa (TZS)</th>
+                                <th>HoD Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountantPendingExpensesTable">
+                            <!-- Data zitajazwa na JS kutoka Firebase -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Sehemu ya Kuprint Financial Statement -->
+            <div class="settings-section" style="text-align: center; padding: 30px; background: #fff; border: 1px solid #ddd;">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">Financial Report (Monthly)</h3>
+                <p style="color: #555; margin-bottom: 15px; font-size: 0.95rem;">Taarifa hii inajumuisha mapato na matumizi kwa  kila section za mauzo kwa mwezi.</p>
+                <button onclick="printFinancialStatement()" class="btn-submit" style="background-color: #27ae60; display: inline-block; width: auto; padding: 12px 30px; font-weight: bold;">
+                    Print PDF Financial Statement
+                </button>
+            </div>
+        </div>
+
+        <div id="accHostelSection" style="display:none;">
+            <div class="grid-summary" style="margin-bottom:25px;">
+                <div class="card" style="border-left: 5px solid #8e44ad; grid-column: 1 / -1;">
+                    <h3 style="color:#8e44ad;">SALIO LA JUMLA LA HOSTEL</h3>
+                    <div class="amount" id="accHostelBalance" style="color:#8e44ad; font-size:2rem; font-weight:bold;">0 TZS</div>
+                </div>
+            </div>
+
+            <div class="settings-section" style="margin-bottom:25px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                <div class="form-group" style="margin:0;">
+                    <label style="font-weight:bold;">Chagua Muhula</label>
+                    <select id="accHostelMuhulaSelect" onchange="renderHostelAccountantDashboard()">
+                        <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
+                        <option value="Muhula wa Pili">Muhula wa Pili</option>
+                    </select>
+                </div>
+                <div>
+                    <h3 style="color:#2c3e50; margin:0;">Idadi ya Wanafunzi Waliolipia: <span id="accHostelStudentCount" style="color:#8e44ad;">0</span></h3>
+                </div>
+            </div>
+
+            <div class="table-section" style="margin-bottom: 25px;">
+                <h3 style="color: var(--primary-color);">Malipo ya Wanafunzi Yanayosubiri Uthibitisho</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Jina la Mwanafunzi</th><th>Darasa</th><th>Muhula</th><th>Kiasi (TZS)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="accHostelPendingPaymentsTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-section" style="margin-bottom: 25px;">
+                <h3 style="color: var(--warning-color);">Matumizi Yaliyoidhinishwa na Head of School, Yanayosubiri Kutolewa Fedha</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="accHostelPendingExpensesTable"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= HEAD OF SCHOOL VIEW ================= -->
+    <div id="hosView" style="display:none;">
+        <h2 class="section-title">HEAD OF SCHOOL</h2>
+
+        <div class="tabs" style="margin-bottom:20px;">
+            <button class="tab-btn active" id="hosTabMiradi" onclick="switchHosTab('miradi')"> Miradi</button>
+            <button class="tab-btn" id="hosTabHostel" onclick="switchHosTab('hostel')"> Hostel</button>
+        </div>
+
+        <div id="hosMiradiSection">
+            <div class="grid-summary">
+                <div class="card maziwa" style="border-left: 5px solid #2980b9;">
+                    <h3>Total Makusanyo (Section Zote)</h3>
+                    <div class="amount" id="hos-total-sales" style="color: #2980b9;">0 TZS</div>
+                </div>
+                <div class="card mgahawa" style="border-left: 5px solid #27ae60;">
+                    <h3>Total Faida</h3>
+                    <div class="amount" id="hos-total-profit" style="color: #27ae60;">0 TZS</div>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h3 style="color: var(--primary-color);">Mchanganuo wa Miradi kwa Wiki Hii</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Jina la Mradi</th>
+                                <th>Mauzo (TZS)</th>
+                                <th>Matumizi (TZS)</th>
+                                <th>Faida (TZS)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-hos-weekly-summary"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="manager-section" style="background: #fdfefe; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                <h3 style="color: var(--primary-color); margin-bottom: 15px;">Maoni kwa Supervisor wa Section</h3>
+                <form id="hosCommentForm" onsubmit="sendHosComment(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Chagua Section</label>
+                            <select id="comment-idara" >
+                                <option value="maziwa">Maziwa</option>
+                                <option value="saloon">Saloon</option>
+                                <option value="mgahawa">Mgahawa</option>
+                                <option value="duka">Duka</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Maelezo ya Maagizo</label>
+                            <input type="text" id="comment-text" placeholder="Andika maagizo hapa..." >
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" style="background-color: #2980b9; margin-top: 15px;">Send</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="hosHostelSection" style="display:none;">
+            <h2 class="section-title" style="color:#8e44ad;"> HOSTEL</h2>
+
+            <div class="settings-section" style="margin-bottom:25px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                <div class="form-group" style="margin:0;">
+                    <label style="font-weight:bold;">Chagua Muhula</label>
+                    <select id="hosHostelMuhulaSelect" onchange="renderHosHostelSummary()">
+                        <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
+                        <option value="Muhula wa Pili">Muhula wa Pili</option>
+                    </select>
+                </div>
+                <div>
+                    <h3 style="color:#2c3e50; margin:0;">Idadi ya Wanafunzi Waliolipia Ada ya Hostel: <span id="hosHostelStudentCount" style="color:#8e44ad;">0</span></h3>
+                </div>
+                <button onclick="printHostelStatement()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF Taarifa ya Hostel</button>
+            </div>
+
+            <div class="table-section">
+                <h3 style="color: var(--warning-color); margin-bottom: 10px;">Maombi Yanayosubiri Uidhinishaji</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Msimamizi</th><th>Maelezo ya Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="table-hostel-pending-requests"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h3 style="color: var(--primary-color);">Ripoti ya Matumizi Yaliyoidhinishwa</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Msimamizi</th><th>Matumizi</th><th>Gharama (TZS)</th></tr>
+                        </thead>
+                        <tbody id="table-hostel-approved-requests"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MANAGER VIEW (SUPERVISOR) ================= -->
+    <div id="managerView" class="manager-section" style="display:none;">
+        <div class="alert" id="successAlert">Sent Successfully!</div>
+        
+        <div style="margin-bottom:25px;display:flex;gap:20px;">
+            <div class="form-group">
+                <label style="font-weight:bold;">Select Section</label>
+                <select id="mradiSelect" onchange="toggleForm()">
+                    <option value="maziwa">Mauzo ya Maziwa</option>
+                    <option value="saloon">Saloon</option>
+                    <option value="mgahawa">Mgahawa</option>
+                    <option value="duka">Duka</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label style="font-weight:bold;">Report Type</label>
+                <select id="infoTypeSelect" onchange="toggleForm()">
+                    <option value="sales">Record Sales</option>
+                    <option value="expense">Request Expenses</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="sales-forms-container">
+            <form id="form-maziwa-sales" class="project-form active" onsubmit="saveMaziwaSales(event)">
+                <h3 style="color: var(--primary-color);">Maziwa: Sales</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Tarehe</label><input type="date" id="maziwa-t" required></div>
+                    <div class="form-group"><label>Msimamizi</label><input type="text" id="m-maziwa" readonly></div>
+                    <div class="form-group"><label>Lita Zilizokamuliwa</label><input type="number" id="maziwa-kam" required min="0"></div>
+                    <div class="form-group"><label>Lita Zilizouzwa</label><input type="number" id="maziwa-uz" required min="0"></div>
+                    <div class="form-group"><label>Pesa Zilizopatikana (TZS)</label><input type="number" id="maziwa-p" required min="0"></div>
+                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="number" id="maziwa-mhasibu" required min="0"></div>
+                </div>
+                <button type="submit" class="btn-submit">Save Records!</button>
+            </form>
+
+            <form id="form-saloon-sales" class="project-form" onsubmit="saveSaloonSales(event)">
+                <h3 style="color: var(--primary-color);">Saloon: Sales</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Tarehe</label><input type="date" id="saloon-t" required></div>
+                    <div class="form-group"><label>Msimamizi</label><input type="text" id="m-saloon" readonly></div>
+                    <div class="form-group"><label>Idadi ya Watu Walionyolewa</label><input type="number" id="saloon-w" required min="0"></div>
+                    <div class="form-group"><label>Pesa Iliyopatikana (TZS)</label><input type="number" id="saloon-p" required min="0"></div>
+                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="number" id="saloon-mhasibu" required min="0"></div>
+                </div>
+                <button type="submit" class="btn-submit">Save Records!</button>
+            </form>
+
+            <form id="form-mgahawa-sales" class="project-form" onsubmit="saveMgahawaSales(event)">
+                <h3 style="color: var(--primary-color);">Mgahawa: Sales</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Tarehe</label><input type="date" id="mgahawa-t" required></div>
+                    <div class="form-group"><label>Msimamizi</label><input type="text" id="m-mgahawa" readonly></div>
+                    <div class="form-group"><label>Vitu Vilivyonunuliwa Leo</label><input type="text" id="mgahawa-v" placeholder="Mfano: Unga, Mafuta n.k" required></div>
+                    <div class="form-group"><label>Gharama ya Vitu Vyote (TZS)</label><input type="number" id="mgahawa-gh" required min="0"></div>
+                    <div class="form-group"><label>Mauzo ya Jumla (TZS)</label><input type="number" id="mgahawa-p" required min="0"></div>
+                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="number" id="mgahawa-mhasibu" required min="0"></div>
+                </div>
+                <button type="submit" class="btn-submit">Record Sales!</button>
+            </form>
+
+            <form id="form-duka-sales" class="project-form" onsubmit="saveDukaSales(event)">
+                <h3 style="color: var(--primary-color);">Duka: Sales</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Tarehe</label><input type="date" id="duka-t" required></div>
+                    <div class="form-group"><label>Msimamizi</label><input type="text" id="m-duka" readonly></div>
+                    <div class="form-group"><label>Bidhaa Zilizonunuliwa Leo</label><input type="text" id="duka-v" placeholder="Mfano: Sukari, Mafuta, Sabuni n.k" required></div>
+                    <div class="form-group"><label>Gharama ya Bidhaa Vyote (TZS)</label><input type="number" id="duka-gh" required min="0"></div>
+                    <div class="form-group"><label>Mauzo ya Jumla (TZS)</label><input type="number" id="duka-p" required min="0"></div>
+                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="number" id="duka-mhasibu" required min="0"></div>
+                </div>
+                <button type="submit" class="btn-submit">Record Sales!</button>
+            </form>
+        </div>
+
+        <form id="expense-request-form" class="project-form" onsubmit="submitExpenseRequest(event)">
+            <h3 style="color: var(--warning-color);">Request Expenses to HoD</h3>
+            <div class="form-grid">
+                <div class="form-group"><label>Tarehe</label><input type="date" id="exp-t" required></div>
+                <div class="form-group">
+                    <label>Select Section</label>
+                    <select id="exp-idara">
+                        <option value="maziwa">Maziwa</option>
+                        <option value="saloon">Saloon</option>
+                        <option value="mgahawa">Mgahawa</option>
+                        <option value="duka">Duka</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Bidhaa/Kitu Kinachohitajika</label><input type="text" id="exp-jina" placeholder="Mfano: Kununua pumba, Spirit n.k" required></div>
+                <div class="form-group"><label>Gharama Inayohitajika (TZS)</label><input type="number" id="exp-gharama" required min="1"></div>
+            </div>
+            <button type="submit" class="btn-submit" style="background-color: var(--warning-color);">Send Request</button>
+        </form>
+    </div>
+
+    <!-- ================= HOSTEL MANAGER VIEW ================= -->
+    <div id="hostelManagerView" class="manager-section" style="display:none;">
+        <h2 class="section-title" style="color:#8e44ad;">DASHBOARD YA HOSTEL</h2>
+        <div class="alert" id="hostelSuccessAlert" style="display:none; background:#2ecc71; color:white; padding:12px; border-radius:6px; margin-bottom:15px; text-align:center;">Sent Successifully!</div>
+
+        <div class="settings-section" style="margin-bottom:20px;">
+            <h3 style="color:#8e44ad;">Supervisor's name</h3>
+            <form id="hostelInfoForm" onsubmit="saveHostelInfo(event)">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" id="hostel-msimamizi-jina" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" style="background-color:#8b5e3c;">Save Name!</button>
+            </form>
+        </div>
+
+        <div style="margin-bottom:25px;display:flex;gap:20px;">
+            <div class="form-group">
+                <label style="font-weight:bold;">Aina ya Taarifa</label>
+                <select id="hostelTypeSelect" onchange="toggleHostelForm()">
+                    <option value="malipo">Add Student</option>
+                    <option value="matumizi">Request Expenses</option>
+                </select>
+            </div>
+        </div>
+
+        <form id="form-hostel-student" class="project-form active" onsubmit="saveHostelStudent(event)">
+            <h3 style="color:#2d5a1b;">Add student Aliyelipa Ada ya Hostel</h3>
+            <div class="form-grid">
+                <div class="form-group"><label>Jina la Mwanafunzi</label><input type="text" id="hostel-jina-mwanafunzi" required></div>
+                <div class="form-group">
+                    <label>Class</label>
+                    <select id="hostel-darasa">
+                        <option value="Form 1">Form 1</option>
+                        <option value="Form 2">Form 2</option>
+                        <option value="Form 3">Form 3</option>
+                        <option value="Form 4">Form 4</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Muhula</label>
+                    <select id="hostel-muhula">
+                        <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
+                        <option value="Muhula wa Pili">Muhula wa Pili</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Kiasi Kilicholipwa (TZS)</label><input type="number" id="hostel-kiasi" required min="0"></div>
+                <div class="form-group"><label>Tarehe</label><input type="date" id="hostel-tarehe" required></div>
+            </div>
+            <button type="submit" class="btn-submit" style="background-color:#8e44ad;">Add Student</button>
+        </form>
+
+        <div class="table-section" style="margin-top:20px;">
+            <h3 style="color:#8e44ad;">List of Added Students</h3>
+            <div id="hostelStudentsListContainer"></div>
+        </div>
+
+        <form id="form-hostel-matumizi" class="project-form" onsubmit="submitHostelExpense(event)">
+            <h3 style="color:var(--warning-color);">Request Expenses to Head of School</h3>
+            <div class="form-grid">
+                <div class="form-group"><label>Tarehe</label><input type="date" id="hostel-exp-t" required></div>
+                <div class="form-group">
+                    <label>Muhula</label>
+                    <select id="hostel-exp-muhula">
+                        <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
+                        <option value="Muhula wa Pili">Muhula wa Pili</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Bidhaa/Kitu Kinachohitajika</label><input type="text" id="hostel-exp-jina" placeholder="Mfano: Chakula, Umeme, Matengenezo n.k" required></div>
+                <div class="form-group"><label>Gharama Inayohitajika (TZS)</label><input type="number" id="hostel-exp-gharama" required min="1"></div>
+            </div>
+            <button type="submit" class="btn-submit" style="background-color:var(--warning-color);">Send Request</button>
+        </form>
+    </div>
+
+</div>
+
+<!-- POP-UP NEWS KWA SUPERVISOR -->
+<div id="newsPopup" style="display:none; position:fixed; bottom:20px; right:20px; width:320px; background:white; box-shadow:0 10px 25px rgba(0,0,0,0.2); border-radius:8px; border-left:6px solid #e67e22; z-index:99999; padding:15px; box-sizing: border-box;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <h4 style="color:#e67e22; margin:0; font-size:15px;">New Message kutoka kwa Head of School!</h4>
+        <button onclick="document.getElementById('newsPopup').style.display='none'" style="border:none; background:none; cursor:pointer; font-weight:bold; font-size:16px; color:#999;">&times;</button>
+    </div>
+    <p id="popupMessage" style="font-size:11px; color:#333; margin:0 0 12px 0; line-height:1.4;"></p>
+    <div class="form-group" style="margin:0;">
+        <input type="text" id="popupReply" placeholder="Andika majibu yako hapa..." style="width:100%; padding:8px; font-size:13px; margin-bottom:8px; border:1px solid #ddd; border-radius:4px; box-sizing:border-box;">
+        <button onclick="submitNewsReply()" style="background:#e67e22; color:white; border:none; padding:8px; width:100%; border-radius:4px; cursor:pointer; font-weight:bold; font-size:13px;">Send feedback</button>
+    </div>
+</div>
+
+<!-- TOAST CONTAINER (Notifications) -->
+<div id="toastContainer" style="position:fixed; top:20px; right:20px; z-index:100000; display:flex; flex-direction:column; gap:10px;"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="./script.js"></script>
+</div>
+  </body>
+</html>
