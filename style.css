@@ -22,6 +22,7 @@ body {
     display: flex; 
     flex-direction: column; 
     min-height: 100vh; 
+    transition: background-color 0.3s ease;
 }
 
 header {
@@ -32,6 +33,7 @@ header {
     justify-content: space-between; 
     align-items: center; 
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: background-color 0.3s ease;
 }
 
 header h1 { 
@@ -256,9 +258,10 @@ th {
     border-radius: 4px; 
     display: none; 
 }
+
 /* ===== ROLE THEMES ===== */
 body.theme-admin { --primary-color: #1f4068; }
-body.theme-accountant { --primary-color: #1e8449; }
+body.theme-accountant { --primary-color: #1e293b; --secondary-color: #0f766e; --bg-color: #f8fafc; --border-color: #cbd5e1; }
 body.theme-hos { --primary-color: #b7950b; }
 body.theme-supervisor { --primary-color: #d35400; }
-body.theme-hostel { --primary-color: #7b241c; }
+body.theme-hostel { --primary-color: #059669; --secondary-color: #10b981; --bg-color: #ecfdf5; --border-color: #a7f3d0; }
