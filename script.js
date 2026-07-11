@@ -615,8 +615,7 @@ function addPdfFooter(doc) {
         doc.setTextColor(120);
         doc.text("© 2026 JohnsonDev85. All rights reserved!", doc.internal.pageSize.width / 2, pageHeight - 14, { align: "center" });
         doc.text("This System is Built with love by JohnsonDev85", doc.internal.pageSize.width / 2, pageHeight - 9, { align: "center" });
-      doc.text("Phone: +255 624 399 338/ 774 633 472", doc.internal.pageSize.width / 2, pageHeight - 4, { align: "center" });
-        doc.text("Email: jyona0607@gmail.com", doc.internal.pageSize.width / 2, pageHeight - 2, { align: "center" });
+        doc.text("Email: jyona0607@gmail.com", doc.internal.pageSize.width / 2, pageHeight - 4, { align: "center" });
     }
 }
 
