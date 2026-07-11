@@ -12,6 +12,18 @@ const firebaseConfig = {
 const firebaseApp = firebase.initializeApp(firebaseConfig);
 const firestore = firebase.firestore();
 
+// ===== HOSTEL REQUIRED AMOUNTS (per student, per muhula) =====
+const HOSTEL_REQUIRED = {
+  ada_hostel: 25000,
+  ada_taaluma: 20000,
+  mahindi: 5,
+  maharage: 2,
+  mchele: 15
+};
+
+// ===== MAZIWA: BEI YA LITA KWA WATEJA WA ORDER (MKOPO) =====
+const MAZIWA_BEI_LITA = 1500;
+
 // ===== LOGIN SYSTEM =====
 let currentRole = null;
 let listenersStarted = false;
@@ -81,6 +93,12 @@ let hostelMatumiziInitialized = false;
 let hostelBalance = 0;
 const DARASA_ORDER = ['Form 1', 'Form 2', 'Form 3', 'Form 4'];
 
+// ===== MAZIWA WATEJA STATE =====
+let maziwaWateja = [];
+let maziwaOda = [];
+let maziwaMalipoWateja = [];
+let mazwaOdaInitialized = false;
+
 // ===== REAL-TIME LISTENERS =====
 function startListeners() {
   firestore.collection('settings').doc('supervisors').onSnapshot(doc => {
@@ -141,7 +159,7 @@ function startListeners() {
         if (change.type === 'added') {
           const d = change.doc.data();
           if (currentRole === 'hod' || currentRole === 'hos' || currentRole === 'accountant') {
-            addNotification(` ${d.msimamizi || 'Msimamizi wa Bweni'} ameongeza mwanafunzi ${d.jina_mwanafunzi || ''} (TZS ${(d.kiasi || 0).toLocaleString()}) - Hostel`);
+            addNotification(` ${d.msimamizi || 'Msimamizi wa Bweni'} ameongeza mwanafunzi ${d.jina_mwanafunzi || ''} - Hostel`);
           }
         }
       });
@@ -162,7 +180,7 @@ function startListeners() {
         if (change.type === 'added') {
           const d = change.doc.data();
           if (currentRole === 'hos') {
-            addNotification(` Ombi jipya la matumizi ya Hostel: ${d.jina} - TZS ${(d.gharama || 0).toLocaleString()}`);
+            addNotification(` Ombi  la matumizi ya Hostel: ${d.jina} - TZS ${(d.gharama || 0).toLocaleString()}`);
           }
         }
       });
@@ -185,22 +203,77 @@ function startListeners() {
       }
     }
   });
+
+  // ===== MAZIWA WATEJA LISTENERS =====
+  firestore.collection('maziwa_wateja').orderBy('jina').onSnapshot(snapshot => {
+    maziwaWateja = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMazwaWatejaDropdowns();
+    renderMazwaWatejaList();
+  });
+
+  firestore.collection('maziwa_oda').orderBy('tarehe', 'desc').onSnapshot(snapshot => {
+    maziwaOda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    if (mazwaOdaInitialized) {
+      snapshot.docChanges().forEach(change => {
+        if (change.type === 'added' && currentRole === 'hod') {
+          const d = change.doc.data();
+          addNotification(`🥛 Oda mpya: ${d.jina_mteja} amechukua Lt${d.lita} (TZS ${d.kiasi.toLocaleString()})`);
+        }
+      });
+    } else {
+      mazwaOdaInitialized = true;
+    }
+
+    renderHodMazwaOdaTable();
+    calculateAccountantBalances();
+  });
+
+  firestore.collection('maziwa_malipo_wateja').orderBy('tarehe', 'desc').onSnapshot(snapshot => {
+    maziwaMalipoWateja = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderAccMalipoWatejaTable();
+    calculateAccountantBalances();
+  });
 }
 
+// ===== TOGGLE FORM (Sales / Expense / Wateja wa Order - Maziwa) =====
 function toggleForm() {
     const mradi = document.getElementById('mradiSelect').value;
-    const type = document.getElementById('infoTypeSelect').value;
+    const watejaOpt = document.getElementById('opt-wateja-mkopo');
+    if (watejaOpt) watejaOpt.style.display = mradi === 'maziwa' ? 'block' : 'none';
+
+    let type = document.getElementById('infoTypeSelect').value;
+    if (mradi !== 'maziwa' && type === 'wateja') {
+        type = 'sales';
+        document.getElementById('infoTypeSelect').value = 'sales';
+    }
+
     document.querySelectorAll('.project-form').forEach(f => f.classList.remove('active'));
     if (type === 'expense') {
         document.getElementById('expense-request-form').classList.add('active');
         document.getElementById('exp-idara').value = mradi;
+    } else if (type === 'wateja') {
+        document.getElementById('form-maziwa-wateja').classList.add('active');
+        renderMazwaWatejaDropdowns();
+        renderMazwaWatejaList();
     } else {
         document.getElementById(`form-${mradi}-sales`).classList.add('active');
     }
 }
 
+// ===== ROLE SWITCH + THEME =====
 function switchRole() {
     const role = document.getElementById('roleSelect').value;
+
+    const themeMap = {
+        admin: 'theme-admin',
+        manager: 'theme-supervisor',
+        hos: 'theme-hos',
+        accountant: 'theme-accountant',
+        hostelmanager: 'theme-hostel'
+    };
+    document.body.className = themeMap[role] || '';
+
     updateNotifBellVisibility();
     document.getElementById('adminView').style.display = role === 'admin' ? 'block' : 'none';
     document.getElementById('managerView').style.display = role === 'manager' ? 'block' : 'none';
@@ -342,9 +415,9 @@ function loadSupervisors() {
 
 // ===== DELETE RECORD (generic) =====
 function deleteRecord(collection, id) {
-    if (confirm("⚠️ Una uhakika unataka kufuta record hii? Haiwezi kurudishwa!")) {
+    if (confirm(" Una uhakika unataka kufuta record hii? Haiwezi kurudishwa!")) {
         firestore.collection(collection).doc(id).delete()
-          .catch(e => alert("Kosa la kufuta: " + e.message));
+          .catch(e => alert("Error in Deleting: " + e.message));
     }
 }
 
@@ -355,7 +428,7 @@ function submitExpenseRequest(e) {
     const record = {
         tarehe: document.getElementById('exp-t').value,
         idara: idara,
-        msimamizi: supervisors[idara] || "Hajasetwa",
+        msimamizi: supervisors[idara] || "Not-found",
         jina: document.getElementById('exp-jina').value,
         gharama: parseFloat(document.getElementById('exp-gharama').value) || 0,
         status: 'pending',
@@ -403,7 +476,7 @@ function renderAdminApprovedExpenses() {
     if(!tbody) return;
     tbody.innerHTML = '';
     requests.filter(r => r.status === 'approved').forEach(r => {
-        tbody.innerHTML += `<tr><td>${r.tarehe}</td><td style="text-transform:capitalize;">${r.idara}</td><td>${r.jina}</td><td>${r.gharama.toLocaleString()}</td><td><button onclick="deleteRecord('requests','${r.id}')" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;">🗑 Delete</button></td></tr>`;
+        tbody.innerHTML += `<tr><td>${r.tarehe}</td><td style="text-transform:capitalize;">${r.idara}</td><td>${r.jina}</td><td>${r.gharama.toLocaleString()}</td><td><button onclick="deleteRecord('requests','${r.id}')" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;"> Delete</button></td></tr>`;
     });
 }
 
@@ -421,7 +494,7 @@ function renderTables() {
         if(!tbody) return;
         let html = '';
         arr.forEach(d => {
-            let delBtn = `<button onclick="deleteRecord('${col}','${d.id}')" style="background:#e74c3c;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px;">🗑 Delete</button>`;
+            let delBtn = `<button onclick="deleteRecord('${col}','${d.id}')" style="background:#e74c3c;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px;"> Delete</button>`;
             if(type === 'm') html += `<tr><td>${d.tarehe}</td><td>${d.msimamizi}</td><td>${d.kamuliwa}</td><td>${d.uzwa}</td><td>${d.baki}</td><td>${d.pesa.toLocaleString()}</td><td>${d.mhasibu.toLocaleString()}</td><td>${d.matumizi_jina}</td><td>${d.matumizi_gharama.toLocaleString()}</td><td style="font-weight:bold;color:${d.faida>=0?'green':'red'}">${d.faida.toLocaleString()}</td><td>${delBtn}</td></tr>`;
             if(type === 's') html += `<tr><td>${d.tarehe}</td><td>${d.msimamizi}</td><td>${d.watu}</td><td>${d.pesa.toLocaleString()}</td><td>${d.mhasibu.toLocaleString()}</td><td>${d.matumizi_jina}</td><td>${d.matumizi_gharama.toLocaleString()}</td><td style="font-weight:bold;color:${d.faida>=0?'green':'red'}">${d.faida.toLocaleString()}</td><td>${delBtn}</td></tr>`;
             if(type === 'mg') html += `<tr><td>${d.tarehe}</td><td>${d.msimamizi}</td><td>${d.vitu}</td><td>${d.gharama.toLocaleString()}</td><td>${d.mauzo.toLocaleString()}</td><td>${d.mhasibu.toLocaleString()}</td><td>${d.matumizi_jina}</td><td>${d.matumizi_gharama.toLocaleString()}</td><td style="font-weight:bold;color:${d.faida>=0?'green':'red'}">${d.faida.toLocaleString()}</td><td>${delBtn}</td></tr>`;
@@ -442,6 +515,10 @@ function calculateAccountantBalances() {
         let confirmedIncome = db[section]
             .filter(d => d.status_mhasibu === 'approved')
             .reduce((total, item) => total + (item.mhasibu || 0), 0);
+
+        if (section === 'maziwa') {
+            confirmedIncome += maziwaMalipoWateja.reduce((t, p) => t + (p.kiasi || 0), 0);
+        }
 
         let paidExpenses = requests
             .filter(r => r.idara === section && r.status === 'approved' && r.status_fedha === 'paid')
@@ -480,7 +557,7 @@ function renderAccountantDashboard() {
                         <td style="color:#27ae60; font-weight:bold;">${d.mhasibu.toLocaleString()} TZS</td>
                         <td>Msimamizi: ${d.msimamizi}</td>
                         <td>
-                            <button onclick="approveCollection('${section}', '${d.id}')" style="background:#27ae60; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">✅ Approve</button>
+                            <button onclick="approveCollection('${section}', '${d.id}')" style="background:#27ae60; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;"> Approve</button>
                         </td>
                     </tr>`;
             });
@@ -499,7 +576,7 @@ function renderAccountantDashboard() {
                     <td style="color:#e74c3c; font-weight:bold;">${r.gharama.toLocaleString()} TZS</td>
                     <td style="color:#27ae60; font-weight:bold;">ACCEPTED (HoD)</td>
                     <td>
-                        <button onclick="disburseExpense('${r.id}')" style="background:#e67e22; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">💵 Cashout</button>
+                        <button onclick="disburseExpense('${r.id}')" style="background:#e67e22; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;"> Cashout</button>
                     </td>
                 </tr>`;
         });
@@ -537,7 +614,7 @@ function addPdfFooter(doc) {
         doc.setFontSize(8);
         doc.setTextColor(120);
         doc.text("© 2026 JohnsonDev85. All rights reserved!", doc.internal.pageSize.width / 2, pageHeight - 14, { align: "center" });
-        doc.text("Built with \u2764 by JohnsonDev85", doc.internal.pageSize.width / 2, pageHeight - 9, { align: "center" });
+        doc.text("This System is Built with love by JohnsonDev85", doc.internal.pageSize.width / 2, pageHeight - 9, { align: "center" });
         doc.text("Email: jyona0607@gmail.com", doc.internal.pageSize.width / 2, pageHeight - 4, { align: "center" });
     }
 }
@@ -552,7 +629,7 @@ function printFinancialStatement() {
     doc.text("KIDEGEMBYE SECONDARY SCHOOL", 105, 18, { align: "center" });
     doc.setFontSize(11);
     doc.setTextColor(100);
-    doc.text("RIPOTI YA HALI YA KIFEDHA YA MIRADI (FINANCIAL STATEMENT)", 105, 25, { align: "center" });
+    doc.text("RIPOTI YA  KIFEDHA YA MIRADI (FINANCIAL STATEMENT)", 105, 25, { align: "center" });
     doc.setFontSize(9);
     doc.setTextColor(80);
     doc.text(`Tarehe ya Ripoti: ${new Date().toLocaleDateString('en-GB')}`, 195, 33, { align: "right" });
@@ -699,7 +776,7 @@ function sendHosComment(e) {
     firestore.collection('comments').add(newComment).then(() => {
         alert(" Maagizo yametumwa kikamilifu!");
         document.getElementById('hosCommentForm').reset();
-    }).catch(e => alert("Kosa la kutuma agizo: " + e.message));
+    }).catch(e => alert("Error: " + e.message));
 }
 
 // ===== SUPERVISOR NEWS POPUP REPLY =====
@@ -719,7 +796,7 @@ function submitNewsReply() {
             alert("✅ Sent successifully!");
             document.getElementById('newsPopup').style.display = 'none';
             document.getElementById('popupReply').value = '';
-        }).catch(e => alert("Kosa la kutuma jibu: " + e.message));
+        }).catch(e => alert("Error: " + e.message));
     }
 }
 
@@ -792,17 +869,83 @@ function updateNotifBellVisibility() {
     wrapper.style.display = (currentRole === 'hod' || currentRole === 'hos' || currentRole === 'accountant') ? 'block' : 'none';
 }
 
-// ===== HOSTEL: MSIMAMIZI WA BWENI =====
-function loadHostelInfo() {
-    const nameInput = document.getElementById('hostel-msimamizi-jina');
-    if (nameInput) nameInput.value = hostelInfo.msimamizi || "";
+// ===== HOSTEL: HELPERS ZA MADENI =====
+function getHostelDeficiencies(d) {
+    return {
+        ada_hostel: (d.ada_hostel || 0) - HOSTEL_REQUIRED.ada_hostel,
+        ada_taaluma: (d.ada_taaluma || 0) - HOSTEL_REQUIRED.ada_taaluma,
+        mahindi: (d.mahindi || 0) - HOSTEL_REQUIRED.mahindi,
+        maharage: (d.maharage || 0) - HOSTEL_REQUIRED.maharage,
+        mchele: (d.mchele || 0) - HOSTEL_REQUIRED.mchele
+    };
 }
 
-function saveHostelInfo(e) {
+function hasHostelDeficiency(d) {
+    const def = getHostelDeficiencies(d);
+    return def.ada_hostel < 0 || def.ada_taaluma < 0 || def.mahindi < 0 || def.maharage < 0 || def.mchele < 0;
+}
+
+function formatCellWithDeni(paid, required, isMoney) {
+    paid = paid || 0;
+    const deni = paid - required;
+    const paidStr = isMoney ? paid.toLocaleString() : String(paid);
+    const deniStr = deni < 0 ? (isMoney ? deni.toLocaleString() : String(deni)) : '0';
+    return `${paidStr} (${deniStr})`;
+}
+
+// Rangi nyekundu kwenye jsPDF autotable kwa namba hasi (madeni)
+function hostelDeniCellStyler(data) {
+    if (data.section === 'body') {
+        const raw = String(data.cell.raw);
+        if (raw.includes('(-') || /^-/.test(raw.trim())) {
+            data.cell.styles.textColor = [192, 57, 43];
+            data.cell.styles.fontStyle = 'bold';
+        }
+    }
+}
+
+// ===== HOSTEL: MSIMAMIZI WA BWENI (jina linawekwa/linabadilishwa na HOS pekee) =====
+function loadHostelInfo() {
+    const isSet = !!(hostelInfo.msimamizi && hostelInfo.msimamizi !== "Not-found" && hostelInfo.msimamizi.trim() !== "");
+
+    const displayName = document.getElementById('hostelSupervisorDisplayName');
+    const warning = document.getElementById('hostelSupervisorNotSetWarning');
+    if (displayName) {
+        displayName.innerText = isSet ? hostelInfo.msimamizi : "Bado Halijawekwa na HOS";
+        displayName.style.color = isSet ? '#047857' : '#b91c1c';
+    }
+    if (warning) warning.style.display = isSet ? 'none' : 'block';
+
+    toggleHostelFormsAvailability(isSet);
+
+    // Prefill HOS's own input field (bila kuathiri kama HOS anaandika sasa hivi)
+    const hosInput = document.getElementById('hos-hostel-supervisor-name');
+    if (hosInput && document.activeElement !== hosInput) {
+        hosInput.value = isSet ? hostelInfo.msimamizi : "";
+    }
+}
+
+function toggleHostelFormsAvailability(isSet) {
+    const typeSelect = document.getElementById('hostelTypeSelect');
+    const studentForm = document.getElementById('form-hostel-student');
+    const matumiziForm = document.getElementById('form-hostel-matumizi');
+    const debtorsBtn = document.getElementById('hostelDebtorsBtn');
+
+    if (typeSelect) typeSelect.disabled = !isSet;
+    if (debtorsBtn) debtorsBtn.disabled = !isSet;
+
+    [studentForm, matumiziForm].forEach(form => {
+        if (!form) return;
+        form.querySelectorAll('input, select, button').forEach(el => { el.disabled = !isSet; });
+    });
+}
+
+function hosSaveHostelSupervisorName(e) {
     e.preventDefault();
-    const jina = document.getElementById('hostel-msimamizi-jina').value;
+    const jina = document.getElementById('hos-hostel-supervisor-name').value.trim();
+    if (!jina) { alert("Tafadhali andika jina la msimamizi!"); return; }
     firestore.collection('settings').doc('hostelInfo').set({ msimamizi: jina })
-      .then(() => alert("Name Saved!"))
+      .then(() => alert("✅ Jina la Msimamizi wa Bweni limewekwa/limebadilishwa!"))
       .catch(e => alert("Kosa: " + e.message));
 }
 
@@ -823,9 +966,13 @@ function saveHostelStudent(e) {
         jina_mwanafunzi: document.getElementById('hostel-jina-mwanafunzi').value,
         darasa: document.getElementById('hostel-darasa').value,
         muhula: document.getElementById('hostel-muhula').value,
-        kiasi: parseFloat(document.getElementById('hostel-kiasi').value) || 0,
         tarehe: document.getElementById('hostel-tarehe').value,
         msimamizi: hostelInfo.msimamizi || "Not found",
+        ada_hostel: parseFloat(document.getElementById('hostel-ada-hostel').value) || 0,
+        ada_taaluma: parseFloat(document.getElementById('hostel-ada-taaluma').value) || 0,
+        mahindi: parseFloat(document.getElementById('hostel-mahindi').value) || 0,
+        maharage: parseFloat(document.getElementById('hostel-maharage').value) || 0,
+        mchele: parseFloat(document.getElementById('hostel-mchele').value) || 0,
         status_mhasibu: 'pending'
     };
     firestore.collection('hostel_malipo').add(record)
@@ -872,16 +1019,20 @@ function renderHostelStudentsList() {
     DARASA_ORDER.forEach(darasa => {
         const wanafunzi = hostelMalipo.filter(d => d.darasa === darasa);
         if (wanafunzi.length === 0) return;
-        html += `<h4 style="color:#8e44ad; margin-top:15px;">${darasa} (${wanafunzi.length})</h4>
+        html += `<h4 style="color:#059669; margin-top:15px;">${darasa} (${wanafunzi.length})</h4>
         <div class="data-table-container">
             <table>
-                <thead><tr><th>Jina</th><th>Muhula</th><th>Kiasi (TZS)</th><th>Tarehe</th><th>Status</th><th>Action</th></tr></thead>
+                <thead><tr><th>Jina</th><th>Muhula</th><th>Ada Hostel</th><th>Ada Taaluma</th><th>Mahindi</th><th>Maharage</th><th>Mchele</th><th>Tarehe</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody>
                     ${wanafunzi.map(d => `
                         <tr>
                             <td>${d.jina_mwanafunzi}</td>
                             <td>${d.muhula}</td>
-                            <td>${d.kiasi.toLocaleString()}</td>
+                            <td>${(d.ada_hostel||0).toLocaleString()}</td>
+                            <td>${(d.ada_taaluma||0).toLocaleString()}</td>
+                            <td>${d.mahindi||0}</td>
+                            <td>${d.maharage||0}</td>
+                            <td>${d.mchele||0}</td>
                             <td>${d.tarehe}</td>
                             <td style="color:${d.status_mhasibu === 'approved' ? 'green' : 'orange'}; font-weight:bold;">${d.status_mhasibu === 'approved' ? 'Approved' : 'Pending'}</td>
                             <td><button onclick="deleteRecord('hostel_malipo','${d.id}')" style="background:#e74c3c;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px;">🗑 Delete</button></td>
@@ -891,6 +1042,70 @@ function renderHostelStudentsList() {
         </div>`;
     });
     container.innerHTML = html || `<p style="color:#999; text-align:center; padding:15px;">No any Student.</p>`;
+}
+
+// ===== SUPERVISOR: PDF ya Wanaodaiwa =====
+function printHostelDebtorsReport() {
+    const muhulaSelect = document.getElementById('hostelSupervisorMuhulaSelect');
+    const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
+
+    const wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
+    const wanaodaiwa = wanafunziMuhula.filter(hasHostelDeficiency);
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.setTextColor(5, 150, 105);
+    doc.text("KIDEGEMBYE SECONDARY SCHOOL", 105, 18, { align: "center" });
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`RIPOTI YA WANAFUNZI WANAODAIWA - ${muhula.toUpperCase()}`, 105, 25, { align: "center" });
+    doc.setFontSize(9);
+    doc.setTextColor(80);
+    doc.text(`Tarehe ya Ripoti: ${new Date().toLocaleDateString('en-GB')}`, 195, 33, { align: "right" });
+
+    let finalY;
+    if (wanaodaiwa.length === 0) {
+        doc.setFontSize(11);
+        doc.setTextColor(50);
+        doc.text("Hakuna mwanafunzi anayedaiwa kwa muhula huu. Wote wamelipa kikamilifu!", 14, 45);
+        finalY = 55;
+    } else {
+        doc.autoTable({
+            startY: 40,
+            head: [["Jina la Mwanafunzi", "Darasa", "Mahindi", "Maharage", "Mchele", "Ada Hostel", "Ada Taaluma"]],
+            body: wanaodaiwa.map(d => {
+                const def = getHostelDeficiencies(d);
+                return [
+                    d.jina_mwanafunzi,
+                    d.darasa,
+                    def.mahindi < 0 ? def.mahindi : 0,
+                    def.maharage < 0 ? def.maharage : 0,
+                    def.mchele < 0 ? def.mchele : 0,
+                    def.ada_hostel < 0 ? def.ada_hostel.toLocaleString() : "0",
+                    def.ada_taaluma < 0 ? def.ada_taaluma.toLocaleString() : "0"
+                ];
+            }),
+            theme: 'grid',
+            headStyles: { fillColor: [185, 28, 28] },
+            styles: { fontSize: 9 },
+            didParseCell: hostelDeniCellStyler
+        });
+        finalY = doc.lastAutoTable.finalY + 20;
+    }
+
+    if (finalY > doc.internal.pageSize.height - 30) {
+        doc.addPage();
+        finalY = 30;
+    }
+    doc.setFontSize(10);
+    doc.setTextColor(50);
+    doc.text("Msimamizi wa Hostel: ____________________", 14, finalY);
+
+    addPdfFooter(doc);
+
+    doc.save(`Wanaodaiwa-Hostel-${muhula.replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
 // ===== HOS: TABS =====
@@ -965,7 +1180,7 @@ function renderHosHostelSummary() {
     }
 }
 
-// ===== HOS: PDF ya Taarifa Kamili ya Hostel =====
+// ===== HOS: PDF ya Taarifa Kamili ya Hostel (Alicholipa + Deni) =====
 function printHostelStatement() {
     const muhulaSelect = document.getElementById('hosHostelMuhulaSelect');
     const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
@@ -973,7 +1188,7 @@ function printHostelStatement() {
     const wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
     const makusanyo = wanafunziMuhula
         .filter(d => d.status_mhasibu === 'approved')
-        .reduce((t, d) => t + (d.kiasi || 0), 0);
+        .reduce((t, d) => t + (d.ada_hostel || 0) + (d.ada_taaluma || 0), 0);
 
     const matumiziMuhula = hostelMatumizi.filter(r => r.muhula === muhula && r.status === 'approved');
     const jumlaMatumizi = matumiziMuhula
@@ -997,15 +1212,15 @@ function printHostelStatement() {
 
     doc.autoTable({
         startY: 40,
-        head: [["Muhtasari wa Kifedha", ""]],
+        head: [["Summary ya Makusanyo", ""]],
         body: [
-            ["Jumla ya Makusanyo Yaliyothibitishwa", makusanyo.toLocaleString() + " TZS"],
+            ["Jumla ya Makusanyo Yaliyothibitishwa (Ada Hostel + Taaluma)", makusanyo.toLocaleString() + " TZS"],
             ["Jumla ya Matumizi Yaliyolipwa", jumlaMatumizi.toLocaleString() + " TZS"],
             ["SALIO LA MUHULA", salio.toLocaleString() + " TZS"],
             ["Idadi ya Wanafunzi Waliolipia", String(wanafunziMuhula.length)]
         ],
         theme: 'grid',
-        headStyles: { fillColor: [142, 68, 173] }
+        headStyles: { fillColor: [5, 150, 105] }
     });
 
     let currentY = doc.lastAutoTable.finalY + 10;
@@ -1021,20 +1236,24 @@ function printHostelStatement() {
 
         doc.setFontSize(11);
         doc.setTextColor(27, 58, 63);
-        doc.text(darasa, 14, currentY);
+        doc.text(`${darasa}  (Kila safu: Alicholipa (Deni))`, 14, currentY);
 
         doc.autoTable({
             startY: currentY + 3,
-            head: [["Jina la Mwanafunzi", "Kiasi (TZS)", "Tarehe", "Status"]],
+            head: [["Jina la Mwanafunzi", "Ada Hostel", "Ada Taaluma", "Mahindi", "Maharage", "Mchele", "Status"]],
             body: group.map(d => [
                 d.jina_mwanafunzi,
-                d.kiasi.toLocaleString(),
-                d.tarehe,
-                d.status_mhasibu === 'approved' ? 'Approved' : 'Waiting for approval'
+                formatCellWithDeni(d.ada_hostel, HOSTEL_REQUIRED.ada_hostel, true),
+                formatCellWithDeni(d.ada_taaluma, HOSTEL_REQUIRED.ada_taaluma, true),
+                formatCellWithDeni(d.mahindi, HOSTEL_REQUIRED.mahindi, false),
+                formatCellWithDeni(d.maharage, HOSTEL_REQUIRED.maharage, false),
+                formatCellWithDeni(d.mchele, HOSTEL_REQUIRED.mchele, false),
+                d.status_mhasibu === 'approved' ? 'Approved' : 'Pending'
             ]),
             theme: 'striped',
-            headStyles: { fillColor: [142, 68, 173] },
-            styles: { fontSize: 9 }
+            headStyles: { fillColor: [5, 150, 105] },
+            styles: { fontSize: 8 },
+            didParseCell: hostelDeniCellStyler
         });
 
         currentY = doc.lastAutoTable.finalY + 10;
@@ -1060,7 +1279,7 @@ function printHostelStatement() {
                 r.status_fedha === 'paid' ? 'Paid' : 'Wait for Payment'
             ]),
             theme: 'striped',
-            headStyles: { fillColor: [142, 68, 173] },
+            headStyles: { fillColor: [5, 150, 105] },
             styles: { fontSize: 9 }
         });
 
@@ -1076,7 +1295,7 @@ function printHostelStatement() {
 
     doc.setFontSize(10);
     doc.setTextColor(50);
-    doc.text("Msimamizi wa Bweni: ____________________", 14, currentY);
+    doc.text("Msimamizi wa Hostel: ____________________", 14, currentY);
     doc.text("Mhasibu: ____________________", 90, currentY);
     doc.text("Head of School: ____________________", 150, currentY);
 
@@ -1111,7 +1330,7 @@ function switchAccTab(tab) {
 function calculateHostelBalance() {
     const confirmedIncome = hostelMalipo
         .filter(d => d.status_mhasibu === 'approved')
-        .reduce((t, d) => t + (d.kiasi || 0), 0);
+        .reduce((t, d) => t + (d.ada_hostel || 0) + (d.ada_taaluma || 0), 0);
 
     const paidExpenses = hostelMatumizi
         .filter(r => r.status === 'approved' && r.status_fedha === 'paid')
@@ -1144,8 +1363,12 @@ function renderHostelAccountantDashboard() {
                     <td>${d.jina_mwanafunzi}</td>
                     <td>${d.darasa}</td>
                     <td>${d.muhula}</td>
-                    <td>${d.kiasi.toLocaleString()}</td>
-                    <td><button onclick="approveHostelPayment('${d.id}')" style="background:#27ae60; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">✅ Thibitisha</button></td>
+                    <td>${(d.ada_hostel||0).toLocaleString()}</td>
+                    <td>${(d.ada_taaluma||0).toLocaleString()}</td>
+                    <td>${d.mahindi||0}</td>
+                    <td>${d.maharage||0}</td>
+                    <td>${d.mchele||0}</td>
+                    <td><button onclick="approveHostelPayment('${d.id}')" style="background:#27ae60; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">Approve</button></td>
                 </tr>`;
         });
     }
@@ -1159,7 +1382,7 @@ function renderHostelAccountantDashboard() {
                     <td>${r.tarehe}</td>
                     <td>${r.jina}</td>
                     <td>${r.gharama.toLocaleString()}</td>
-                    <td><button onclick="disburseHostelExpense('${r.id}')" style="background:#e67e22; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">💵 Toa Hela</button></td>
+                    <td><button onclick="disburseHostelExpense('${r.id}')" style="background:#e67e22; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;"> Cashout</button></td>
                 </tr>`;
         });
     }
@@ -1183,4 +1406,248 @@ function disburseHostelExpense(id) {
     firestore.collection('hostel_matumizi').doc(id).update({ status_fedha: 'paid' })
       .then(() => alert("Fedha imetolewa kikamilifu kwa ajili ya matumizi ya Hostel!"))
       .catch(e => alert("Kosa: " + e.message));
+}
+
+// ===== MAZIWA: WATEJA WA ORDER (MKOPO) =====
+function addMazwaMteja() {
+    const input = document.getElementById('mteja-jina-mpya');
+    const jina = input.value.trim();
+    if (!jina) { alert("Andika jina la mteja kwanza!"); return; }
+
+    firestore.collection('maziwa_wateja').add({
+        jina: jina,
+        msimamizi: supervisors.maziwa || "Not-found",
+        tarehe_created: new Date().toISOString().split('T')[0]
+    }).then(() => {
+        input.value = '';
+        alert("✅ Client Added!");
+    }).catch(e => alert("Kosa: " + e.message));
+}
+
+function deleteMazwaMteja(id) {
+    if (confirm("⚠️ Kufuta mteja huyu hakutafuta oda zake za nyuma, lakini hataonekana tena kwenye orodha. Endelea?")) {
+        firestore.collection('maziwa_wateja').doc(id).delete()
+          .catch(e => alert("Kosa: " + e.message));
+    }
+}
+
+function renderMazwaWatejaList() {
+    const container = document.getElementById('mazwaWatejaListContainer');
+    if (!container) return;
+    if (maziwaWateja.length === 0) {
+        container.innerHTML = `<p style="color:#999; font-size:0.9rem;">No added Mteja.</p>`;
+        return;
+    }
+    container.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px;">` +
+        maziwaWateja.map(m => `
+            <span style="background:#eef2f7; padding:6px 12px; border-radius:20px; font-size:0.85rem; display:inline-flex; align-items:center; gap:8px;">
+                ${m.jina}
+                <button onclick="deleteMazwaMteja('${m.id}')" style="border:none; background:none; color:#e74c3c; cursor:pointer; font-weight:bold;">✕</button>
+            </span>
+        `).join('') + `</div>`;
+}
+
+function renderMazwaWatejaDropdowns() {
+    const options = maziwaWateja.map(m => `<option value="${m.id}">${m.jina}</option>`).join('');
+    ['oda-mteja-select', 'pdf-mteja-select', 'acc-mteja-select'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const currentVal = el.value;
+            el.innerHTML = maziwaWateja.length > 0 ? options : `<option value="">No-any</option>`;
+            if (currentVal) el.value = currentVal;
+        }
+    });
+}
+
+function updateOdaKiasiPreview() {
+    const lita = parseFloat(document.getElementById('oda-lita').value) || 0;
+    document.getElementById('oda-kiasi-preview').value = (lita * MAZIWA_BEI_LITA).toLocaleString();
+}
+
+function submitMazwaOda() {
+    const mtejaId = document.getElementById('oda-mteja-select').value;
+    const tarehe = document.getElementById('oda-tarehe').value || new Date().toISOString().split('T')[0];
+    const lita = parseFloat(document.getElementById('oda-lita').value) || 0;
+
+    if (!mtejaId) { alert("Chagua mteja kwanza!"); return; }
+    if (lita <= 0) { alert("Weka idadi ya lita!"); return; }
+
+    const mteja = maziwaWateja.find(m => m.id === mtejaId);
+    const kiasi = lita * MAZIWA_BEI_LITA;
+
+    firestore.collection('maziwa_oda').add({
+        mteja_id: mtejaId,
+        jina_mteja: mteja ? mteja.jina : "Not-found",
+        tarehe: tarehe,
+        lita: lita,
+        bei: MAZIWA_BEI_LITA,
+        kiasi: kiasi,
+        msimamizi: supervisors.maziwa || "Not-found"
+    }).then(() => {
+        document.getElementById('oda-lita').value = '';
+        document.getElementById('oda-kiasi-preview').value = '0';
+        alert("✅ Oda imetumwa kikamilifu!");
+    }).catch(e => alert("Kosa: " + e.message));
+}
+
+function renderHodMazwaOdaTable() {
+    const tbody = document.getElementById('table-hod-maziwa-oda');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    maziwaOda.slice(0, 50).forEach(d => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${d.tarehe}</td>
+                <td>${d.jina_mteja}</td>
+                <td>${d.lita}</td>
+                <td>${d.kiasi.toLocaleString()}</td>
+                <td>${d.msimamizi}</td>
+            </tr>`;
+    });
+}
+
+// ===== MHASIBU: KUREKODI MALIPO YA MTEJA =====
+function recordMazwaWatejaPayment() {
+    const mtejaId = document.getElementById('acc-mteja-select').value;
+    const mwezi = document.getElementById('acc-malipo-mwezi').value;
+    const kiasi = parseFloat(document.getElementById('acc-malipo-kiasi').value) || 0;
+    const tarehe = document.getElementById('acc-malipo-tarehe').value || new Date().toISOString().split('T')[0];
+
+    if (!mtejaId) { alert("Chagua mteja kwanza!"); return; }
+    if (!mwezi) { alert("Chagua mwezi!"); return; }
+    if (kiasi <= 0) { alert("Weka kiasi kilicholipwa!"); return; }
+
+    const mteja = maziwaWateja.find(m => m.id === mtejaId);
+
+    firestore.collection('maziwa_malipo_wateja').add({
+        mteja_id: mtejaId,
+        jina_mteja: mteja ? mteja.jina : "Not-found",
+        mwezi: mwezi,
+        kiasi: kiasi,
+        tarehe: tarehe
+    }).then(() => {
+        document.getElementById('acc-malipo-kiasi').value = '';
+        alert("✅ Malipo yamerekodiwa na yameongezwa kwenye salio la Maziwa!");
+    }).catch(e => alert("Kosa: " + e.message));
+}
+
+function renderAccMalipoWatejaTable() {
+    const tbody = document.getElementById('table-acc-malipo-wateja');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    maziwaMalipoWateja.slice(0, 30).forEach(d => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${d.tarehe}</td>
+                <td>${d.jina_mteja}</td>
+                <td>${d.mwezi}</td>
+                <td>${d.kiasi.toLocaleString()}</td>
+            </tr>`;
+    });
+}
+
+// ===== PDF: RIPOTI YA MWEZI YA MTEJA (na Calendar Grid) =====
+function printMazwaWatejaMonthlyReport() {
+    const mtejaId = document.getElementById('pdf-mteja-select').value;
+    const mwezi = document.getElementById('pdf-mwezi-select').value;
+
+    if (!mtejaId) { alert("Chagua mteja kwanza!"); return; }
+    if (!mwezi) { alert("Chagua mwezi!"); return; }
+
+    const mteja = maziwaWateja.find(m => m.id === mtejaId);
+    const jinaMteja = mteja ? mteja.jina : "Not-found";
+
+    const [year, month] = mwezi.split('-').map(Number);
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    const odaZaMwezi = maziwaOda.filter(o => o.mteja_id === mtejaId && o.tarehe.startsWith(mwezi));
+    const ordersByDay = {};
+    odaZaMwezi.forEach(o => {
+        const day = parseInt(o.tarehe.split('-')[2], 10);
+        ordersByDay[day] = (ordersByDay[day] || 0) + o.lita;
+    });
+
+    const totalLita = odaZaMwezi.reduce((t, o) => t + o.lita, 0);
+    const totalKiasi = odaZaMwezi.reduce((t, o) => t + o.kiasi, 0);
+
+    const malipoYaMwezi = maziwaMalipoWateja.filter(p => p.mteja_id === mtejaId && p.mwezi === mwezi);
+    const jumlaMalipo = malipoYaMwezi.reduce((t, p) => t + p.kiasi, 0);
+    const deniLinalobaki = totalKiasi - jumlaMalipo;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    doc.setFontSize(16);
+    doc.setTextColor(31, 64, 104);
+    doc.text("KIDEGEMBYE SECONDARY SCHOOL", 105, 18, { align: "center" });
+    doc.setFontSize(11);
+    doc.setTextColor(100);
+    doc.text(`RIPOTI YA MTEJA - MAZIWA (${mwezi})`, 105, 25, { align: "center" });
+    doc.setFontSize(9);
+    doc.setTextColor(80);
+    doc.text(`Tarehe ya Ripoti: ${new Date().toLocaleDateString('en-GB')}`, 195, 33, { align: "right" });
+
+    doc.autoTable({
+        startY: 40,
+        head: [["Summary ya Oda ya Mteja: " + jinaMteja, ""]],
+        body: [
+            ["Jumla ya Lita Alizochukua", totalLita + " Lita"],
+            ["Kiasi Anachodaiwa (Bei: TZS " + MAZIWA_BEI_LITA + "/Lita)", totalKiasi.toLocaleString() + " TZS"],
+            ["Kiasi Alicholipa Mwezi Huu", jumlaMalipo.toLocaleString() + " TZS"],
+            ["DENI LINALOBAKI", deniLinalobaki.toLocaleString() + " TZS"]
+        ],
+        theme: 'grid',
+        headStyles: { fillColor: [31, 64, 104] }
+    });
+
+    let currentY = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(11);
+    doc.setTextColor(31, 64, 104);
+    doc.text("Kalenda ya Siku alizochukua (✅) na Hakuchukua (❌)", 14, currentY);
+    currentY += 5;
+
+    const calendarRows = [];
+    let week = [];
+    for (let day = 1; day <= daysInMonth; day++) {
+        const lita = ordersByDay[day];
+        const cellText = lita ? `${day}\n\u2705 Lt${lita}` : `${day}\n\u274C`;
+        week.push(cellText);
+        if (week.length === 7) { calendarRows.push(week); week = []; }
+    }
+    if (week.length > 0) {
+        while (week.length < 7) week.push('');
+        calendarRows.push(week);
+    }
+
+    doc.autoTable({
+        startY: currentY,
+        body: calendarRows,
+        theme: 'grid',
+        showHead: 'never',
+        styles: { halign: 'center', valign: 'middle', minCellHeight: 16, fontSize: 9 },
+        didParseCell: function(data) {
+            const raw = String(data.cell.raw);
+            if (raw.includes('\u2705')) {
+                data.cell.styles.textColor = [39, 174, 96];
+                data.cell.styles.fontStyle = 'bold';
+            } else if (raw.includes('\u274C')) {
+                data.cell.styles.textColor = [192, 57, 43];
+            }
+        }
+    });
+
+    currentY = doc.lastAutoTable.finalY + 20;
+    if (currentY > doc.internal.pageSize.height - 30) {
+        doc.addPage();
+        currentY = 30;
+    }
+
+    doc.setFontSize(10);
+    doc.setTextColor(50);
+    doc.text("Mteja: ____________________", 14, currentY);
+    doc.text("Msimamizi wa Maziwa: ____________________", 110, currentY);
+
+    addPdfFooter(doc);
+
+    doc.save(`Ripoti-Mteja-${jinaMteja.replace(/\s+/g,'-')}-${mwezi}.pdf`);
 }
