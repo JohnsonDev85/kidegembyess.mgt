@@ -14,11 +14,11 @@ const firestore = firebase.firestore();
 
 // ===== HOSTEL REQUIRED AMOUNTS (per student, per muhula) =====
 const HOSTEL_REQUIRED = {
-  ada_hostel: 25000,
-  ada_taaluma: 20000,
+  ada_hostel: 61500,
+  ada_taaluma: 10000,
   mahindi: 5,
-  maharage: 2,
-  mchele: 15
+  maharage: 1.5,
+  mchele: 10
 };
 
 // ===== MAZIWA: BEI YA LITA KWA WATEJA WA ORDER (MKOPO) =====
@@ -615,6 +615,7 @@ function addPdfFooter(doc) {
         doc.setTextColor(120);
         doc.text("© 2026 JohnsonDev85. All rights reserved!", doc.internal.pageSize.width / 2, pageHeight - 14, { align: "center" });
         doc.text("This System is Built with love by JohnsonDev85", doc.internal.pageSize.width / 2, pageHeight - 9, { align: "center" });
+      doc.text("Phone: +255 624 399 338/ 774 633 472", doc.internal.pageSize.width / 2, pageHeight - 4, { align: "center" });
         doc.text("Email: jyona0607@gmail.com", doc.internal.pageSize.width / 2, pageHeight - 4, { align: "center" });
     }
 }
