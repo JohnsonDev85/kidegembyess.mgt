@@ -159,7 +159,7 @@ function startListeners() {
         if (change.type === 'added') {
           const d = change.doc.data();
           if (currentRole === 'hod' || currentRole === 'hos' || currentRole === 'accountant') {
-            addNotification(` ${d.msimamizi || 'Msimamizi wa Bweni'} ameongeza mwanafunzi ${d.jina_mwanafunzi || ''} - Hostel`);
+            addNotification(` ${d.msimamizi || 'Msimamizi wa Hostel'} ameongeza mwanafunzi ${d.jina_mwanafunzi || ''} - Hostel`);
           }
         }
       });
@@ -282,6 +282,12 @@ function switchRole() {
     const hostelView = document.getElementById('hostelManagerView');
     if (hostelView) hostelView.style.display = role === 'hostelmanager' ? 'block' : 'none';
 
+    if (role === 'manager') {
+        toggleForm();
+    }
+    if (role === 'manager') {
+        toggleForm();
+    }
     if (role === 'hostelmanager') {
         loadHostelInfo();
         renderHostelStudentsList();
@@ -945,7 +951,7 @@ function hosSaveHostelSupervisorName(e) {
     const jina = document.getElementById('hos-hostel-supervisor-name').value.trim();
     if (!jina) { alert("Tafadhali andika jina la msimamizi!"); return; }
     firestore.collection('settings').doc('hostelInfo').set({ msimamizi: jina })
-      .then(() => alert("✅ Jina la Msimamizi wa Bweni limewekwa/limebadilishwa!"))
+      .then(() => alert("✅ Jina la Msimamizi wa Hostel limewekwa/limebadilishwa!"))
       .catch(e => alert("Kosa: " + e.message));
 }
 
@@ -1420,7 +1426,7 @@ function addMazwaMteja() {
         tarehe_created: new Date().toISOString().split('T')[0]
     }).then(() => {
         input.value = '';
-        alert("✅ Client Added!");
+        alert("✅ Customer Added to the List!");
     }).catch(e => alert("Kosa: " + e.message));
 }
 
@@ -1435,7 +1441,7 @@ function renderMazwaWatejaList() {
     const container = document.getElementById('mazwaWatejaListContainer');
     if (!container) return;
     if (maziwaWateja.length === 0) {
-        container.innerHTML = `<p style="color:#999; font-size:0.9rem;">No added Mteja.</p>`;
+        container.innerHTML = `<p style="color:#999; font-size:0.9rem;">No any added customer</p>`;
         return;
     }
     container.innerHTML = `<div style="display:flex; flex-wrap:wrap; gap:8px;">` +
@@ -1469,7 +1475,7 @@ function submitMazwaOda() {
     const tarehe = document.getElementById('oda-tarehe').value || new Date().toISOString().split('T')[0];
     const lita = parseFloat(document.getElementById('oda-lita').value) || 0;
 
-    if (!mtejaId) { alert("Chagua mteja kwanza!"); return; }
+    if (!mtejaId) { alert("Chagua Jina la mteja "); return; }
     if (lita <= 0) { alert("Weka idadi ya lita!"); return; }
 
     const mteja = maziwaWateja.find(m => m.id === mtejaId);
@@ -1486,7 +1492,7 @@ function submitMazwaOda() {
     }).then(() => {
         document.getElementById('oda-lita').value = '';
         document.getElementById('oda-kiasi-preview').value = '0';
-        alert("✅ Oda imetumwa kikamilifu!");
+        alert("✅ Order Has been sent successifully to HoD!");
     }).catch(e => alert("Kosa: " + e.message));
 }
 
@@ -1513,7 +1519,7 @@ function recordMazwaWatejaPayment() {
     const kiasi = parseFloat(document.getElementById('acc-malipo-kiasi').value) || 0;
     const tarehe = document.getElementById('acc-malipo-tarehe').value || new Date().toISOString().split('T')[0];
 
-    if (!mtejaId) { alert("Chagua mteja kwanza!"); return; }
+    if (!mtejaId) { alert("Chagua Jina la mteja"); return; }
     if (!mwezi) { alert("Chagua mwezi!"); return; }
     if (kiasi <= 0) { alert("Weka kiasi kilicholipwa!"); return; }
 
@@ -1551,7 +1557,7 @@ function printMazwaWatejaMonthlyReport() {
     const mtejaId = document.getElementById('pdf-mteja-select').value;
     const mwezi = document.getElementById('pdf-mwezi-select').value;
 
-    if (!mtejaId) { alert("Chagua mteja kwanza!"); return; }
+    if (!mtejaId) { alert("Chagua Jina la mteja"); return; }
     if (!mwezi) { alert("Chagua mwezi!"); return; }
 
     const mteja = maziwaWateja.find(m => m.id === mtejaId);
@@ -1589,13 +1595,10 @@ function printMazwaWatejaMonthlyReport() {
 
     doc.autoTable({
         startY: 40,
-        head: [["Summary ya Oda ya Mteja: " + jinaMteja, ""]],
+        head: [["Jina la Customer: " + jinaMteja, ""]],
         body: [
             ["Jumla ya Lita Alizochukua", totalLita + " Lita"],
-            ["Kiasi Anachodaiwa (Bei: TZS " + MAZIWA_BEI_LITA + "/Lita)", totalKiasi.toLocaleString() + " TZS"],
-            ["Kiasi Alicholipa Mwezi Huu", jumlaMalipo.toLocaleString() + " TZS"],
-            ["DENI LINALOBAKI", deniLinalobaki.toLocaleString() + " TZS"]
-        ],
+            ["Kiasi Anachodaiwa (Bei: TZS " + MAZIWA_BEI_LITA + "/Lita)", totalKiasi.toLocaleString() + " TZS"]], 
         theme: 'grid',
         headStyles: { fillColor: [31, 64, 104] }
     });
@@ -1603,14 +1606,14 @@ function printMazwaWatejaMonthlyReport() {
     let currentY = doc.lastAutoTable.finalY + 10;
     doc.setFontSize(11);
     doc.setTextColor(31, 64, 104);
-    doc.text("Kalenda ya Siku alizochukua (✅) na Hakuchukua (❌)", 14, currentY);
+    doc.text("Kalenda ya Oda kwa kila Siku: 'taken' = alichukua, 'not taken' = hakuchukua", 14, currentY);
     currentY += 5;
 
     const calendarRows = [];
     let week = [];
     for (let day = 1; day <= daysInMonth; day++) {
         const lita = ordersByDay[day];
-        const cellText = lita ? `${day}\n\u2705 Lt${lita}` : `${day}\n\u274C`;
+        const cellText = lita ? `${day}\ntaken (${lita}lt)` : `${day}\nnot taken`;
         week.push(cellText);
         if (week.length === 7) { calendarRows.push(week); week = []; }
     }
@@ -1624,14 +1627,15 @@ function printMazwaWatejaMonthlyReport() {
         body: calendarRows,
         theme: 'grid',
         showHead: 'never',
-        styles: { halign: 'center', valign: 'middle', minCellHeight: 16, fontSize: 9 },
+        styles: { halign: 'center', valign: 'middle', minCellHeight: 16, fontSize: 8 },
         didParseCell: function(data) {
             const raw = String(data.cell.raw);
-            if (raw.includes('\u2705')) {
+            if (raw.includes('taken (')) {
                 data.cell.styles.textColor = [39, 174, 96];
                 data.cell.styles.fontStyle = 'bold';
-            } else if (raw.includes('\u274C')) {
-                data.cell.styles.textColor = [192, 57, 43];
+                data.cell.styles.fillColor = [235, 250, 240];
+            } else if (raw.includes('not taken')) {
+                data.cell.styles.textColor = [150, 150, 150];
             }
         }
     });
@@ -1644,7 +1648,6 @@ function printMazwaWatejaMonthlyReport() {
 
     doc.setFontSize(10);
     doc.setTextColor(50);
-    doc.text("Mteja: ____________________", 14, currentY);
     doc.text("Msimamizi wa Maziwa: ____________________", 110, currentY);
 
     addPdfFooter(doc);
