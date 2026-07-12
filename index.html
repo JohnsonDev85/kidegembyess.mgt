@@ -47,7 +47,7 @@
             </div>
         </div>
         <span id="userLabel" style="font-weight:bold;color:white;"></span>
-        <button onclick="logout()" style="margin-left:15px;padding:6px 14px;background:rgb(20,50,230);color:white;border:none;border-radius:6px;cursor:pointer;">Logout</button>
+        <button onclick="logout()" style="margin-left:15px;padding:6px 14px;background:#e74c3c;color:white;border:none;border-radius:6px;cursor:pointer;">Logout</button>
     </div>
 </header>
 
@@ -88,7 +88,8 @@
                 </table>
             </div>
         </div>
-<div class="table-section">
+
+        <div class="table-section">
             <h3 style="color: var(--primary-color); margin-bottom: 10px;">Oda za Wateja wa Mkopo - Maziwa (Taarifa)</h3>
             <div class="data-table-container">
                 <table>
@@ -97,8 +98,10 @@
                 </table>
             </div>
         </div>
+
         <h2 class="section-title">Summary ya Faida</h2>
         <div class="tabs">
+            <button class="tab-btn active" onclick="changePeriod('day', this)">Per Day</button>
             <button class="tab-btn" onclick="changePeriod('week', this)">Per Week</button>
             <button class="tab-btn" onclick="changePeriod('month', this)">Per Month</button>
         </div>
@@ -235,7 +238,9 @@
                     </table>
                 </div>
             </div>
-<div class="table-section" style="margin-bottom: 25px;">
+
+            <!-- Malipo ya Wateja wa Mkopo - Maziwa -->
+            <div class="table-section" style="margin-bottom: 25px;">
                 <h3 style="color: var(--primary-color);">Malipo ya Wateja wa Mkopo (Maziwa)</h3>
                 <div class="form-grid" style="margin-bottom:10px;">
                     <div class="form-group">
@@ -255,7 +260,7 @@
                         <input type="date" id="acc-malipo-tarehe">
                     </div>
                 </div>
-                <button onclick="recordMazwaWatejaPayment()" class="btn-submit" style="background-color:#27ae60;"> Rekodi Malipo</button>
+                <button onclick="recordMazwaWatejaPayment()" class="btn-submit" style="background-color:#27ae60;">💰 Rekodi Malipo</button>
 
                 <div class="data-table-container" style="margin-top:20px;">
                     <table>
@@ -265,7 +270,6 @@
                 </div>
             </div>
 
-           
             <!-- Sehemu ya Kuprint Financial Statement -->
             <div class="settings-section" style="text-align: center; padding: 30px; background: #fff; border: 1px solid #ddd;">
                 <h3 style="color: var(--primary-color); margin-bottom: 10px;">Financial Report (Monthly)</h3>
@@ -391,6 +395,20 @@
         <div id="hosHostelSection" style="display:none;">
             <h2 class="section-title" style="color:#8e44ad;"> HOSTEL</h2>
 
+            <div class="settings-section" style="margin-bottom:25px;">
+                <h3 style="color:#8e44ad;">Weka/Badilisha Jina la Msimamizi wa Bweni</h3>
+                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">Msimamizi hataweza kuongeza taarifa yoyote ya hostel mpaka umweke jina lake hapa.</p>
+                <form id="hosSetHostelSupervisorForm" onsubmit="hosSaveHostelSupervisorName(event)">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Jina la Msimamizi wa Bweni</label>
+                            <input type="text" id="hos-hostel-supervisor-name" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" style="background-color:#8e44ad;">Save Name</button>
+                </form>
+            </div>
+
             <div class="settings-section" style="margin-bottom:25px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                 <div class="form-group" style="margin:0;">
                     <label style="font-weight:bold;">Chagua Muhula</label>
@@ -446,13 +464,13 @@
                 </select>
             </div>
             <div class="form-group">
-    <label style="font-weight:bold;">Report Type</label>
-    <select id="infoTypeSelect" onchange="toggleForm()">
-        <option value="sales">Record Sales</option>
-        <option value="expense">Request Expenses</option>
-        <option id="opt-wateja-mkopo" value="wateja" style="display:none;">Wateja wa Order (Deni) - Maziwa</option>
-    </select>
-</div>
+                <label style="font-weight:bold;">Report Type</label>
+                <select id="infoTypeSelect" onchange="toggleForm()">
+                    <option value="sales">Record Sales</option>
+                    <option value="expense">Request Expenses</option>
+                    <option id="opt-wateja-mkopo" value="wateja" style="display:none;">Wateja wa Order (Deni) - Maziwa</option>
+                </select>
+            </div>
         </div>
 
         <div id="sales-forms-container">
@@ -506,61 +524,63 @@
                 </div>
                 <button type="submit" class="btn-submit">Record Sales!</button>
             </form>
+
+            <form id="form-maziwa-wateja" class="project-form" onsubmit="return false;">
+                <h3 style="color:#1f4068;">Wateja wa Order/Bill - Maziwa</h3>
+                <p style="color:#666; font-size:0.9rem; margin-bottom:10px;">Bei ya sasa: <strong>TZS 1,500</strong> kwa lita moja.</p>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Add New Customer</label>
+                        <input type="text" id="mteja-jina-mpya" placeholder="Jina la mteja...">
+                    </div>
+                    <div class="form-group" style="justify-content:flex-end;">
+                        <button type="button" onclick="addMazwaMteja()" class="btn-submit" style="margin-top:0;">Add Now!</button>
+                    </div>
+                </div>
+
+                <div id="mazwaWatejaListContainer" style="margin:15px 0;"></div>
+
+                <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+
+                <h4 style="color:#1f4068; margin-bottom:10px;">Weka Oda ya Leo</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Chagua Jina la  Mteja</label>
+                        <select id="oda-mteja-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tarehe</label>
+                        <input type="date" id="oda-tarehe">
+                    </div>
+                    <div class="form-group">
+                        <label>Lita Alizochukua</label>
+                        <input type="number" id="oda-lita" min="0" step="0.1" oninput="updateOdaKiasiPreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Kiasi Anachodaiwa (TZS)</label>
+                        <input type="text" id="oda-kiasi-preview" readonly value="0">
+                    </div>
+                </div>
+                <button type="button" onclick="submitMazwaOda()" class="btn-submit">Send Order to HoD</button>
+
+                <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+
+                <h4 style="color:#1f4068; margin-bottom:10px;">Download Ripoti ya Mwezi (PDF)</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Chagua jina la Mteja</label>
+                        <select id="pdf-mteja-select"></select>
+                    </div>
+                    <div class="form-group">
+                        <label>Chagua Mwezi</label>
+                        <input type="month" id="pdf-mwezi-select">
+                    </div>
+                </div>
+                <button type="button" onclick="printMazwaWatejaMonthlyReport()" class="btn-submit" style="background-color:#8e44ad;"> Download bill ya Mteja</button>
+            </form>
         </div>
-<form id="form-maziwa-wateja" class="project-form" onsubmit="return false;">
-            <h3 style="color:#1f4068;">Wateja wa Order (Mkopo) - Maziwa</h3>
-            <p style="color:#666; font-size:0.9rem; margin-bottom:10px;">Bei ya sasa: <strong>TZS 1,500</strong> kwa lita moja.</p>
 
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Ongeza Mteja Mpya</label>
-                    <input type="text" id="mteja-jina-mpya" placeholder="Jina la mteja...">
-                </div>
-                <div class="form-group" style="justify-content:flex-end;">
-                    <button type="button" onclick="addMazwaMteja()" class="btn-submit" style="margin-top:0;">➕ Ongeza Mteja</button>
-                </div>
-            </div>
-
-            <div id="mazwaWatejaListContainer" style="margin:15px 0;"></div>
-
-            <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
-
-            <h4 style="color:#1f4068; margin-bottom:10px;">Weka Oda ya Leo</h4>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Chagua Mteja</label>
-                    <select id="oda-mteja-select"></select>
-                </div>
-                <div class="form-group">
-                    <label>Tarehe</label>
-                    <input type="date" id="oda-tarehe">
-                </div>
-                <div class="form-group">
-                    <label>Lita Alizochukua</label>
-                    <input type="number" id="oda-lita" min="0" step="0.1" oninput="updateOdaKiasiPreview()">
-                </div>
-                <div class="form-group">
-                    <label>Kiasi Anachodaiwa (TZS)</label>
-                    <input type="text" id="oda-kiasi-preview" readonly value="0">
-                </div>
-            </div>
-            <button type="button" onclick="submitMazwaOda()" class="btn-submit">Tuma Oda</button>
-
-            <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
-
-            <h4 style="color:#1f4068; margin-bottom:10px;">Pakua Ripoti ya Mwezi (PDF)</h4>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Chagua Mteja</label>
-                    <select id="pdf-mteja-select"></select>
-                </div>
-                <div class="form-group">
-                    <label>Chagua Mwezi</label>
-                    <input type="month" id="pdf-mwezi-select">
-                </div>
-            </div>
-            <button type="button" onclick="printMazwaWatejaMonthlyReport()" class="btn-submit" style="background-color:#8e44ad;">Download Madeni ya Order</button>
-        </form>
         <form id="expense-request-form" class="project-form" onsubmit="submitExpenseRequest(event)">
             <h3 style="color: var(--warning-color);">Request Expenses to HoD</h3>
             <div class="form-grid">
@@ -583,20 +603,15 @@
 
     <!-- ================= HOSTEL MANAGER VIEW ================= -->
     <div id="hostelManagerView" class="manager-section" style="display:none;">
-        <h2 class="section-title" style="color:#059669;">DASHBOARD YA HOSTEL</h2>
+        <h2 class="section-title" style="color:#059669;">KiDe HOSTEL</h2>
         <div class="alert" id="hostelSuccessAlert" style="display:none; background:#2ecc71; color:white; padding:12px; border-radius:6px; margin-bottom:15px; text-align:center;">Sent Successifully!</div>
 
         <div class="settings-section" style="margin-bottom:20px;">
-            <h3 style="color:#059669;">Supervisor's name</h3>
-            <form id="hostelInfoForm" onsubmit="saveHostelInfo(event)">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Name</label>
-                        <input type="text" id="hostel-msimamizi-jina" required>
-                    </div>
-                </div>
-                <button type="submit" class="btn-submit" style="background-color:#059669;">Save Name!</button>
-            </form>
+            <h3 style="color:#059669;">Msimamizi wa Hostel</h3>
+            <p id="hostelSupervisorDisplayName" style="font-size:1.3rem; font-weight:bold; color:#047857;">Uploading...</p>
+            <p id="hostelSupervisorNotSetWarning" style="display:none; color:#b91c1c; font-weight:bold; margin-top:10px; background:#fef2f2; padding:10px; border-radius:6px;">
+                ⚠️ Jina lako halijawekwa na Head of School bado. Tafadhali muombe Head of School akuwekee jina kwanza, ndipo utaweza kujaza taarifa za hostel.
+            </p>
         </div>
 
         <div style="margin-bottom:25px;display:flex;gap:20px;">
@@ -647,7 +662,7 @@
                     <option value="Muhula wa Pili">Muhula wa Pili</option>
                 </select>
             </div>
-            <button onclick="printHostelDebtorsReport()" class="btn-submit" style="background-color:#b91c1c; width:auto; padding:10px 20px;"> Download Ripoti ya Wanafunzi Wanaodaiwa</button>
+            <button id="hostelDebtorsBtn" onclick="printHostelDebtorsReport()" class="btn-submit" style="background-color:#b91c1c; width:auto; padding:10px 20px;"> Download Ripoti ya Wanafunzi Wanaodaiwa</button>
         </div>
 
         <div class="table-section" style="margin-top:20px;">
