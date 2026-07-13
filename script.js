@@ -917,7 +917,7 @@ function loadHostelInfo() {
     const displayName = document.getElementById('hostelSupervisorDisplayName');
     const warning = document.getElementById('hostelSupervisorNotSetWarning');
     if (displayName) {
-        displayName.innerText = isSet ? hostelInfo.msimamizi : "Bado Halijawekwa na HOS";
+        displayName.innerText = isSet ? hostelInfo.msimamizi : "Not-Added by HoS";
         displayName.style.color = isSet ? '#047857' : '#b91c1c';
     }
     if (warning) warning.style.display = isSet ? 'none' : 'block';
@@ -951,7 +951,7 @@ function hosSaveHostelSupervisorName(e) {
     const jina = document.getElementById('hos-hostel-supervisor-name').value.trim();
     if (!jina) { alert("Tafadhali andika jina la msimamizi!"); return; }
     firestore.collection('settings').doc('hostelInfo').set({ msimamizi: jina })
-      .then(() => alert("✅ Jina la Msimamizi wa Hostel limewekwa/limebadilishwa!"))
+      .then(() => alert("✅ Jina la Msimamizi wa Hostel Added!"))
       .catch(e => alert("Kosa: " + e.message));
 }
 
@@ -1431,7 +1431,7 @@ function addMazwaMteja() {
 }
 
 function deleteMazwaMteja(id) {
-    if (confirm("⚠️ Kufuta mteja huyu hakutafuta oda zake za nyuma, lakini hataonekana tena kwenye orodha. Endelea?")) {
+    if (confirm("⚠️ Kufuta mteja huyu hakutafuta oda zake za nyuma, lakini hataonekana tena kwenye list. Endelea?")) {
         firestore.collection('maziwa_wateja').doc(id).delete()
           .catch(e => alert("Kosa: " + e.message));
     }
@@ -1492,7 +1492,7 @@ function submitMazwaOda() {
     }).then(() => {
         document.getElementById('oda-lita').value = '';
         document.getElementById('oda-kiasi-preview').value = '0';
-        alert("✅ Order Has been sent successifully to HoD!");
+        alert("✅ Bill Has been sent successifully to HoD!");
     }).catch(e => alert("Kosa: " + e.message));
 }
 
