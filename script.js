@@ -48,7 +48,7 @@ async function checkLogin() {
       showMainApp('accountant', '  Mhasibu');
     } else if (password === passwords.bweni) {
       currentRole = 'hostelmanager';
-      showMainApp('hostelmanager', ' Msimamizi wa Bweni');
+      showMainApp('hostelmanager', ' Msimamizi wa Hostel');
     } else {
       alert("❌ Password si sahihi!");
     }
