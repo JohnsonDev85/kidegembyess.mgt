@@ -90,7 +90,7 @@
         </div>
 
         <div class="table-section">
-            <h3 style="color: var(--primary-color); margin-bottom: 10px;">Oda za Wateja wa Mkopo - Maziwa (Taarifa)</h3>
+            <h3 style="color: var(--primary-color); margin-bottom: 10px;">Bili za wateja  - Maziwa</h3>
             <div class="data-table-container">
                 <table>
                     <thead><tr><th>Tarehe</th><th>Mteja</th><th>Lita</th><th>Kiasi (TZS)</th><th>Msimamizi</th></tr></thead>
@@ -198,7 +198,7 @@
 
             <!-- Makusanyo yanayosubiri uthibitisho -->
             <div class="table-section" style="margin-bottom: 25px;">
-                <h3 style="color: var(--primary-color);">Mapato (Kutoka kwa Supervisor) Yanayosubiri Uthibitisho </h3>
+                <h3 style="color: var(--primary-color);">Mapato (Kutoka kwa Supervisor) Yanayosubiri Approval </h3>
                 <div class="data-table-container">
                     <table>
                         <thead>
@@ -241,10 +241,10 @@
 
             <!-- Malipo ya Wateja wa Mkopo - Maziwa -->
             <div class="table-section" style="margin-bottom: 25px;">
-                <h3 style="color: var(--primary-color);">Malipo ya Wateja wa Mkopo (Maziwa)</h3>
+                <h3 style="color: var(--primary-color);">Malipo ya Wateja wa Bill (Maziwa)</h3>
                 <div class="form-grid" style="margin-bottom:10px;">
                     <div class="form-group">
-                        <label>Chagua Mteja</label>
+                        <label>Chagua Jina la Mteja</label>
                         <select id="acc-mteja-select"></select>
                     </div>
                     <div class="form-group">
@@ -260,7 +260,7 @@
                         <input type="date" id="acc-malipo-tarehe">
                     </div>
                 </div>
-                <button onclick="recordMazwaWatejaPayment()" class="btn-submit" style="background-color:#27ae60;">💰 Rekodi Malipo</button>
+                <button onclick="recordMazwaWatejaPayment()" class="btn-submit" style="background-color:#27ae60;"> Save Payments</button>
 
                 <div class="data-table-container" style="margin-top:20px;">
                     <table>
@@ -275,7 +275,7 @@
                 <h3 style="color: var(--primary-color); margin-bottom: 10px;">Financial Report (Monthly)</h3>
                 <p style="color: #555; margin-bottom: 15px; font-size: 0.95rem;">Taarifa hii inajumuisha mapato na matumizi kwa  kila section za mauzo kwa mwezi.</p>
                 <button onclick="printFinancialStatement()" class="btn-submit" style="background-color: #27ae60; display: inline-block; width: auto; padding: 12px 30px; font-weight: bold;">
-                    Print PDF Financial Statement
+                    Download (PDF) Financial Statement
                 </button>
             </div>
         </div>
@@ -302,7 +302,7 @@
             </div>
 
             <div class="table-section" style="margin-bottom: 25px;">
-                <h3 style="color: var(--primary-color);">Malipo ya Wanafunzi Yanayosubiri Uthibitisho</h3>
+                <h3 style="color: var(--primary-color);">Malipo ya Wanafunzi Yanayosubiri Approval</h3>
                 <div class="data-table-container">
                     <table>
                         <thead>
@@ -396,12 +396,12 @@
             <h2 class="section-title" style="color:#8e44ad;"> HOSTEL</h2>
 
             <div class="settings-section" style="margin-bottom:25px;">
-                <h3 style="color:#8e44ad;">Weka/Badilisha Jina la Msimamizi wa Bweni</h3>
-                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">Msimamizi hataweza kuongeza taarifa yoyote ya hostel mpaka umweke jina lake hapa.</p>
+                <h3 style="color:#8e44ad;">Weka Jina la Msimamizi wa Hostel</h3>
+                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">Msimamizi hataweza kuongeza taarifa yoyote ya hostel mpaka umweke jina lake.</p>
                 <form id="hosSetHostelSupervisorForm" onsubmit="hosSaveHostelSupervisorName(event)">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Jina la Msimamizi wa Bweni</label>
+                            <label>Jina la Msimamizi wa Hostel</label>
                             <input type="text" id="hos-hostel-supervisor-name" required>
                         </div>
                     </div>
@@ -468,7 +468,7 @@
                 <select id="infoTypeSelect" onchange="toggleForm()">
                     <option value="sales">Record Sales</option>
                     <option value="expense">Request Expenses</option>
-                    <option id="opt-wateja-mkopo" value="wateja" style="display:none;">Wateja wa Order (Deni) - Maziwa</option>
+                    <option id="opt-wateja-mkopo" value="wateja" style="display:none;">Wateja wa Bill - Maziwa</option>
                 </select>
             </div>
         </div>
@@ -526,8 +526,8 @@
             </form>
 
             <form id="form-maziwa-wateja" class="project-form" onsubmit="return false;">
-                <h3 style="color:#1f4068;">Wateja wa Order/Bill - Maziwa</h3>
-                <p style="color:#666; font-size:0.9rem; margin-bottom:10px;">Bei ya sasa: <strong>TZS 1,500</strong> kwa lita moja.</p>
+                <h3 style="color:#1f4068;">Wateja wa Bill - Maziwa</h3>
+                <p style="color:#666; font-size:0.9rem; margin-bottom:10px;">Bei ya Maziwa: <strong>TZS 1,500</strong> kwa lita moja.</p>
 
                 <div class="form-grid">
                     <div class="form-group">
@@ -543,7 +543,7 @@
 
                 <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
 
-                <h4 style="color:#1f4068; margin-bottom:10px;">Weka Oda ya Leo</h4>
+                <h4 style="color:#1f4068; margin-bottom:10px;">Record Bill ya Leo</h4>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Chagua Jina la  Mteja</label>
@@ -566,7 +566,7 @@
 
                 <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
 
-                <h4 style="color:#1f4068; margin-bottom:10px;">Download Ripoti ya Mwezi (PDF)</h4>
+                <h4 style="color:#1f4068; margin-bottom:10px;">Download Bill ya Mwezi (PDF)</h4>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Chagua jina la Mteja</label>
@@ -610,7 +610,7 @@
             <h3 style="color:#059669;">Msimamizi wa Hostel</h3>
             <p id="hostelSupervisorDisplayName" style="font-size:1.3rem; font-weight:bold; color:#047857;">Uploading...</p>
             <p id="hostelSupervisorNotSetWarning" style="display:none; color:#b91c1c; font-weight:bold; margin-top:10px; background:#fef2f2; padding:10px; border-radius:6px;">
-                ⚠️ Jina lako halijawekwa na Head of School bado. Tafadhali muombe Head of School akuwekee jina kwanza, ndipo utaweza kujaza taarifa za hostel.
+                ⚠️ Jina halijawekwa na Head of School. HoS akiweka Jina la msimamizi wa Hostel, ndipo taarifa za hostel zitaweza kujazwa.
             </p>
         </div>
 
