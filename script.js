@@ -27,13 +27,42 @@ const MAZIWA_BEI_LITA = 1500;
 // ===== LOGIN SYSTEM =====
 let currentRole = null;
 let listenersStarted = false;
+let authReady = false;
+
+// Hakikisha mtumiaji ame-authenticate (anonymous) kabla ya kusoma Firestore
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    authReady = true;
+    console.log("✅ Auth imefanikiwa: " + user.uid);
+  } else {
+    authReady = false;
+    firebase.auth().signInAnonymously().catch(err => {
+      console.error("❌ Anonymous sign-in imeshindwa:", err.message);
+    });
+  }
+});
 
 async function checkLogin() {
   const password = document.getElementById('loginPassword').value;
+
+  // Subiri kwanza mpaka anonymous auth ikamilike
+  if (!authReady) {
+    try {
+      await new Promise((resolve, reject) => {
+        const unsub = firebase.auth().onAuthStateChanged(user => {
+          if (user) { unsub(); resolve(); }
+        });
+        firebase.auth().signInAnonymously().catch(reject);
+      });
+    } catch (err) {
+      alert("❌ Imeshindwa kuunganisha na mfumo: " + err.message);
+      return;
+    }
+  }
+
   try {
     const doc = await firestore.collection('settings').doc('passwords').get();
     const passwords = doc.data();
-
     if (password === passwords.admin) {
       currentRole = 'hod';
       showMainApp('admin', ' Head of Department');
