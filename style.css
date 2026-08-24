@@ -260,8 +260,7 @@ th {
 }
 
 /* ===== ROLE THEMES ===== */
-body.theme-admin { --primary-color: #1f4068; }
-body.theme-accountant { --primary-color: #1e293b; --secondary-color: #0f766e; --bg-color: #f8fafc; --border-color: #cbd5e1; }
 body.theme-hos { --primary-color: #b7950b; }
+body.theme-accountant { --primary-color: #1e293b; --secondary-color: #0f766e; --bg-color: #f8fafc; --border-color: #cbd5e1; }
 body.theme-supervisor { --primary-color: #d35400; }
 body.theme-hostel { --primary-color: #059669; --secondary-color: #10b981; --bg-color: #ecfdf5; --border-color: #a7f3d0; }
