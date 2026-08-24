@@ -11,6 +11,11 @@ const firebaseConfig = {
 };
 const firebaseApp = firebase.initializeApp(firebaseConfig);
 const firestore = firebase.firestore();
+// ===== KUUNGANISHA KIMYA NA FIREBASE (KWA USALAMA) =====
+firebase.auth().signInAnonymously()
+  .catch((error) => {
+    console.error("Auth error:", error);
+  });
 
 // ===== HOSTEL REQUIRED AMOUNTS (per student, per muhula) =====
 const HOSTEL_REQUIRED = {
@@ -27,46 +32,14 @@ const MAZIWA_BEI_LITA = 1500;
 // ===== LOGIN SYSTEM =====
 let currentRole = null;
 let listenersStarted = false;
-let authReady = false;
-
-// Hakikisha mtumiaji ame-authenticate (anonymous) kabla ya kusoma Firestore
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    authReady = true;
-    console.log("✅ Auth imefanikiwa: " + user.uid);
-  } else {
-    authReady = false;
-    firebase.auth().signInAnonymously().catch(err => {
-      console.error("❌ Anonymous sign-in imeshindwa:", err.message);
-    });
-  }
-});
 
 async function checkLogin() {
   const password = document.getElementById('loginPassword').value;
-
-  // Subiri kwanza mpaka anonymous auth ikamilike
-  if (!authReady) {
-    try {
-      await new Promise((resolve, reject) => {
-        const unsub = firebase.auth().onAuthStateChanged(user => {
-          if (user) { unsub(); resolve(); }
-        });
-        firebase.auth().signInAnonymously().catch(reject);
-      });
-    } catch (err) {
-      alert("❌ Imeshindwa kuunganisha na mfumo: " + err.message);
-      return;
-    }
-  }
-
   try {
     const doc = await firestore.collection('settings').doc('passwords').get();
     const passwords = doc.data();
-    if (password === passwords.admin) {
-      currentRole = 'hod';
-      showMainApp('admin', ' Head of Department');
-    } else if (password === passwords.manager) {
+
+    if (password === passwords.manager) {
       currentRole = 'supervisor';
       showMainApp('manager', ' Supervisor');
     } else if (password === passwords.hos) {
@@ -107,7 +80,7 @@ function logout() {
 let db = { maziwa: [], saloon: [], mgahawa: [], duka: [] };
 let supervisors = { maziwa: "Not-found", saloon: "Not-found", mgahawa: "Not-found", duka: "Not-found" };
 let requests = [];
-let currentPeriod = 'day';
+let currentPeriod = 'month';
 
 // ===== NOTIFICATIONS STATE =====
 let notifications = [];
@@ -129,6 +102,9 @@ let maziwaMalipoWateja = [];
 let mazwaOdaInitialized = false;
 
 // ===== REAL-TIME LISTENERS =====
+// NOTE: Tumeongeza .limit() kwenye listeners zenye uwezekano wa kukua kubwa,
+// ili app isome tu records za hivi karibuni badala ya database nzima kila wakati.
+// Hii inaboresha speed kadri data inavyoongezeka miezi/miaka ijayo.
 function startListeners() {
   firestore.collection('settings').doc('supervisors').onSnapshot(doc => {
     if (doc.exists) {
@@ -138,7 +114,7 @@ function startListeners() {
   });
 
   ['maziwa', 'saloon', 'mgahawa', 'duka'].forEach(section => {
-    firestore.collection(section).orderBy('tarehe', 'desc').onSnapshot(snapshot => {
+    firestore.collection(section).orderBy('tarehe', 'desc').limit(200).onSnapshot(snapshot => {
       db[section] = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
       if (sectionsInitialized[section]) {
@@ -146,7 +122,7 @@ function startListeners() {
           if (change.type === 'added') {
             const d = change.doc.data();
             const amount = d.pesa || d.mauzo || d.jumla_mauzo || 0;
-            if (currentRole === 'hod' || currentRole === 'hos' || currentRole === 'accountant') {
+            if (currentRole === 'hos' || currentRole === 'accountant') {
               addNotification(`📥 ${d.msimamizi || 'Msimamizi'} amewasilisha mauzo mapya ya ${section.toUpperCase()} - TZS ${amount.toLocaleString()}`);
             }
           }
@@ -163,7 +139,7 @@ function startListeners() {
     });
   });
 
-  firestore.collection('requests').onSnapshot(snapshot => {
+  firestore.collection('requests').limit(300).onSnapshot(snapshot => {
     requests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAdminRequests();
     renderAdminApprovedExpenses();
@@ -180,14 +156,14 @@ function startListeners() {
     }
   });
 
-  firestore.collection('hostel_malipo').orderBy('tarehe', 'desc').onSnapshot(snapshot => {
+  firestore.collection('hostel_malipo').orderBy('tarehe', 'desc').limit(300).onSnapshot(snapshot => {
     hostelMalipo = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
     if (hostelMalipoInitialized) {
       snapshot.docChanges().forEach(change => {
         if (change.type === 'added') {
           const d = change.doc.data();
-          if (currentRole === 'hod' || currentRole === 'hos' || currentRole === 'accountant') {
+          if (currentRole === 'hos' || currentRole === 'accountant') {
             addNotification(` ${d.msimamizi || 'Msimamizi wa Hostel'} ameongeza mwanafunzi ${d.jina_mwanafunzi || ''} - Hostel`);
           }
         }
@@ -201,7 +177,7 @@ function startListeners() {
     if (currentRole === 'hos') renderHosHostelSummary();
   });
 
-  firestore.collection('hostel_matumizi').onSnapshot(snapshot => {
+  firestore.collection('hostel_matumizi').limit(200).onSnapshot(snapshot => {
     hostelMatumizi = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
     if (hostelMatumiziInitialized) {
@@ -240,12 +216,12 @@ function startListeners() {
     renderMazwaWatejaList();
   });
 
-  firestore.collection('maziwa_oda').orderBy('tarehe', 'desc').onSnapshot(snapshot => {
+  firestore.collection('maziwa_oda').orderBy('tarehe', 'desc').limit(200).onSnapshot(snapshot => {
     maziwaOda = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
     if (mazwaOdaInitialized) {
       snapshot.docChanges().forEach(change => {
-        if (change.type === 'added' && currentRole === 'hod') {
+        if (change.type === 'added' && currentRole === 'hos') {
           const d = change.doc.data();
           addNotification(`🥛 Oda mpya: ${d.jina_mteja} amechukua Lt${d.lita} (TZS ${d.kiasi.toLocaleString()})`);
         }
@@ -258,7 +234,7 @@ function startListeners() {
     calculateAccountantBalances();
   });
 
-  firestore.collection('maziwa_malipo_wateja').orderBy('tarehe', 'desc').onSnapshot(snapshot => {
+  firestore.collection('maziwa_malipo_wateja').orderBy('tarehe', 'desc').limit(200).onSnapshot(snapshot => {
     maziwaMalipoWateja = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     renderAccMalipoWatejaTable();
     calculateAccountantBalances();
@@ -295,7 +271,6 @@ function switchRole() {
     const role = document.getElementById('roleSelect').value;
 
     const themeMap = {
-        admin: 'theme-admin',
         manager: 'theme-supervisor',
         hos: 'theme-hos',
         accountant: 'theme-accountant',
@@ -304,16 +279,12 @@ function switchRole() {
     document.body.className = themeMap[role] || '';
 
     updateNotifBellVisibility();
-    document.getElementById('adminView').style.display = role === 'admin' ? 'block' : 'none';
     document.getElementById('managerView').style.display = role === 'manager' ? 'block' : 'none';
     document.getElementById('hosView').style.display = role === 'hos' ? 'block' : 'none';
     document.getElementById('accountantDashboard').style.display = role === 'accountant' ? 'block' : 'none';
     const hostelView = document.getElementById('hostelManagerView');
     if (hostelView) hostelView.style.display = role === 'hostelmanager' ? 'block' : 'none';
 
-    if (role === 'manager') {
-        toggleForm();
-    }
     if (role === 'manager') {
         toggleForm();
     }
@@ -324,27 +295,16 @@ function switchRole() {
     if (role === 'hos') {
         renderHostelRequests();
         renderHosHostelSummary();
-    }
-
-    if (role === 'admin') {
         renderAdminRequests();
         renderAdminApprovedExpenses();
         calculateAdminSummary();
-    }
-    if (role === 'hos') {
         calculateHosWeeklyDashboard();
+        loadSupervisors();
     }
     if (role === 'accountant') {
         renderAccountantDashboard();
         renderHostelAccountantDashboard();
     }
-}
-
-function changePeriod(period, btn) {
-    currentPeriod = period;
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    calculateAdminSummary();
 }
 
 // ===== SUPERVISORS =====
@@ -471,7 +431,7 @@ function submitExpenseRequest(e) {
     };
     firestore.collection('requests').add(record).then(() => {
         document.getElementById('expense-request-form').reset();
-        alert("Request has been successifully sent to HoD!");
+        alert("Request has been successifully sent to Head of School!");
     }).catch(e => alert("Kosa: " + e.message));
 }
 
@@ -609,7 +569,7 @@ function renderAccountantDashboard() {
                     <td style="text-transform:capitalize; font-weight:bold;">${r.idara}</td>
                     <td>${r.jina}</td>
                     <td style="color:#e74c3c; font-weight:bold;">${r.gharama.toLocaleString()} TZS</td>
-                    <td style="color:#27ae60; font-weight:bold;">ACCEPTED (HoD)</td>
+                    <td style="color:#27ae60; font-weight:bold;">ACCEPTED (Head of School)</td>
                     <td>
                         <button onclick="disburseExpense('${r.id}')" style="background:#e67e22; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;"> Cashout</button>
                     </td>
@@ -654,7 +614,7 @@ function addPdfFooter(doc) {
     }
 }
 
-// ===== PDF: FINANCIAL STATEMENT (Bursar/HoD) =====
+// ===== PDF: FINANCIAL STATEMENT (Bursar/HoS) =====
 function printFinancialStatement() {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -901,7 +861,7 @@ function clearNotifications() {
 function updateNotifBellVisibility() {
     const wrapper = document.getElementById('notifBellWrapper');
     if (!wrapper) return;
-    wrapper.style.display = (currentRole === 'hod' || currentRole === 'hos' || currentRole === 'accountant') ? 'block' : 'none';
+    wrapper.style.display = (currentRole === 'hos' || currentRole === 'accountant') ? 'block' : 'none';
 }
 
 // ===== HOSTEL: HELPERS ZA MADENI =====
@@ -1163,6 +1123,11 @@ function switchHosTab(tab) {
         hostelSection.style.display = 'none';
         tabHostel.classList.remove('active');
         tabMiradi.classList.add('active');
+        renderAdminRequests();
+        renderAdminApprovedExpenses();
+        calculateAdminSummary();
+        calculateHosWeeklyDashboard();
+        loadSupervisors();
     }
 }
 
@@ -1521,7 +1486,7 @@ function submitMazwaOda() {
     }).then(() => {
         document.getElementById('oda-lita').value = '';
         document.getElementById('oda-kiasi-preview').value = '0';
-        alert("✅ Bill Has been sent successifully to HoD!");
+        alert("✅ Bill Has been sent successifully to Head of School!");
     }).catch(e => alert("Kosa: " + e.message));
 }
 
