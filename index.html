@@ -53,114 +53,12 @@
 
 <select id="roleSelect" style="display:none;" onchange="switchRole()">
     <option value="manager">Supervisor</option>
-    <option value="admin">Head Of Department</option>
     <option value="accountant">Mhasibu </option>
     <option value="hos">Head of School</option>
     <option value="hostelmanager">Msimamizi wa Hostel</option>
 </select>
 
 <div class="container">
-
-    <!-- ================= ADMIN VIEW (HoD) ================= -->
-    <div id="adminView" style="display:none;">
-        
-        <div class="settings-section">
-            <h3 style="color: var(--primary-color); margin-bottom: 10px;">Set Supervisors</h3>
-            <form id="supervisorForm" onsubmit="saveSupervisors(event)">
-                <div class="form-grid">
-                    <div class="form-group"><label>Msimamizi wa Maziwa</label><input type="text" id="set-msimamizi-maziwa" required></div>
-                    <div class="form-group"><label>Msimamizi wa Saloon</label><input type="text" id="set-msimamizi-saloon" required></div>
-                    <div class="form-group"><label>Msimamizi wa Mgahawa</label><input type="text" id="set-msimamizi-mgahawa" required></div>
-                    <div class="form-group"><label>Msimamizi wa Duka</label><input type="text" id="set-msimamizi-duka" required></div>
-                </div>
-                <button type="submit" class="btn-submit" style="background-color: var(--primary-color);">Save Supervisors</button>
-            </form>
-        </div>
-
-        <div class="table-section">
-            <h3 style="color: var(--warning-color); margin-bottom: 10px;">Maombi ya Matumizi Yanayosubiri Uidhinishaji</h3>
-            <div class="data-table-container">
-                <table>
-                    <thead>
-                        <tr><th>Tarehe</th><th>Mradi</th><th>Msimamizi</th><th>Maelezo ya Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
-                    </thead>
-                    <tbody id="table-pending-requests"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="table-section">
-            <h3 style="color: var(--primary-color); margin-bottom: 10px;">Bili za wateja  - Maziwa</h3>
-            <div class="data-table-container">
-                <table>
-                    <thead><tr><th>Tarehe</th><th>Mteja</th><th>Lita</th><th>Kiasi (TZS)</th><th>Msimamizi</th></tr></thead>
-                    <tbody id="table-hod-maziwa-oda"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <h2 class="section-title">Summary ya Faida</h2>
-        <div class="tabs">
-            <button class="tab-btn active" onclick="changePeriod('day', this)">Per Day</button>
-            <button class="tab-btn" onclick="changePeriod('week', this)">Per Week</button>
-            <button class="tab-btn" onclick="changePeriod('month', this)">Per Month</button>
-        </div>
-
-        <div class="grid-summary">
-            <div class="card maziwa"><h3>Mauzo Ya Maziwa</h3><div class="amount" id="profit-maziwa">0 TZS</div></div>
-            <div class="card saloon"><h3>Saloon</h3><div class="amount" id="profit-saloon">0 TZS</div></div>
-            <div class="card mgahawa"><h3>Mgahawa</h3><div class="amount" id="profit-mgahawa">0 TZS</div></div>
-            <div class="card duka"><h3>Duka</h3><div class="amount" id="profit-duka">0 TZS</div></div>
-        </div>
-
-        <div class="table-section">
-            <h3 style="color: var(--primary-color);">Ripoti ya Matumizi Yaliyoidhinishwa</h3>
-            <div class="data-table-container">
-                <table>
-                    <thead>
-                        <tr><th>Tarehe</th><th>Idara</th><th>Matumizi Yaliyokubaliwa</th><th>Gharama (TZS)</th><th>Action</th></tr>
-                    </thead>
-                    <tbody id="table-admin-expenses"></tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="table-section">
-            <h2 class="section-title">Ripoti ya Rekodi za Section Zote</h2>
-            
-            <h3>1. Maziwa</h3>
-            <div class="data-table-container">
-                <table>
-                    <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Yaliyokamuliwa (Ltr)</th><th>Yaliyouzwa (Ltr)</th><th>Yaliyobaki (Ltr)</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
-                    <tbody id="table-maziwa"></tbody>
-                </table>
-            </div>
-
-            <h3>2. Saloon</h3>
-            <div class="data-table-container">
-                <table>
-                    <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Watu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
-                    <tbody id="table-saloon"></tbody>
-                </table>
-            </div>
-
-            <h3>3. Mgahawa</h3>
-            <div class="data-table-container">
-                <table>
-                    <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Vitu Vilivyonunuliwa</th><th>Gharama ya Vitu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
-                    <tbody id="table-mgahawa"></tbody>
-                </table>
-            </div>
-
-            <h3>4. Duka</h3>
-            <div class="data-table-container">
-                <table>
-                    <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Bidhaa Zilizonunuliwa</th><th>Gharama ya Bidhaa</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
-                    <tbody id="table-duka"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 
     <!-- ================= ACCOUNTANT DASHBOARD ================= -->
     <div id="accountantDashboard" style="display: none;">
@@ -219,7 +117,7 @@
 
             <!-- Matumizi yanayosubiri kutolewa hela -->
             <div class="table-section" style="margin-bottom: 25px;">
-                <h3 style="color: var(--warning-color);">Maombi ya Matumizi Yanayosubiri Kutolewa Fedha (Yaliyopitishwa na HoD)</h3>
+                <h3 style="color: var(--warning-color);">Maombi ya Matumizi Yanayosubiri Kutolewa Fedha (Yaliyopitishwa na Head of School)</h3>
                 <div class="data-table-container">
                     <table>
                         <thead>
@@ -228,7 +126,7 @@
                                 <th>Section / Mradi</th>
                                 <th>Aina ya Matumizi</th>
                                 <th>Kiasi Kinachotakiwa (TZS)</th>
-                                <th>HoD Status</th>
+                                <th>HoS Status</th>
                                 <th>Action</th>
                             </tr>
                         </thead>
@@ -368,6 +266,102 @@
                     </table>
                 </div>
             </div>
+
+            <!-- ===== ZILIZOKUWA SEHEMU ZA HEAD OF DEPARTMENT (SASA CHINI YA HOS) ===== -->
+
+            <div class="settings-section" style="margin-top:25px;">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">Set Supervisors</h3>
+                <form id="supervisorForm" onsubmit="saveSupervisors(event)">
+                    <div class="form-grid">
+                        <div class="form-group"><label>Msimamizi wa Maziwa</label><input type="text" id="set-msimamizi-maziwa" required></div>
+                        <div class="form-group"><label>Msimamizi wa Saloon</label><input type="text" id="set-msimamizi-saloon" required></div>
+                        <div class="form-group"><label>Msimamizi wa Mgahawa</label><input type="text" id="set-msimamizi-mgahawa" required></div>
+                        <div class="form-group"><label>Msimamizi wa Duka</label><input type="text" id="set-msimamizi-duka" required></div>
+                    </div>
+                    <button type="submit" class="btn-submit" style="background-color: var(--primary-color);">Save Supervisors</button>
+                </form>
+            </div>
+
+            <div class="table-section">
+                <h3 style="color: var(--warning-color); margin-bottom: 10px;">Maombi ya Matumizi Yanayosubiri Uidhinishaji</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Mradi</th><th>Msimamizi</th><th>Maelezo ya Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="table-pending-requests"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h3 style="color: var(--primary-color); margin-bottom: 10px;">Bili za wateja  - Maziwa</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead><tr><th>Tarehe</th><th>Mteja</th><th>Lita</th><th>Kiasi (TZS)</th><th>Msimamizi</th></tr></thead>
+                        <tbody id="table-hod-maziwa-oda"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <h2 class="section-title">Summary ya Faida (Per Month)</h2>
+
+            <div class="grid-summary">
+                <div class="card maziwa"><h3>Mauzo Ya Maziwa</h3><div class="amount" id="profit-maziwa">0 TZS</div></div>
+                <div class="card saloon"><h3>Saloon</h3><div class="amount" id="profit-saloon">0 TZS</div></div>
+                <div class="card mgahawa"><h3>Mgahawa</h3><div class="amount" id="profit-mgahawa">0 TZS</div></div>
+                <div class="card duka"><h3>Duka</h3><div class="amount" id="profit-duka">0 TZS</div></div>
+            </div>
+
+            <div class="table-section">
+                <h3 style="color: var(--primary-color);">Ripoti ya Matumizi Yaliyoidhinishwa</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Idara</th><th>Matumizi Yaliyokubaliwa</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="table-admin-expenses"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h2 class="section-title">Ripoti ya Rekodi za Section Zote</h2>
+
+                <h3>1. Maziwa</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Yaliyokamuliwa (Ltr)</th><th>Yaliyouzwa (Ltr)</th><th>Yaliyobaki (Ltr)</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
+                        <tbody id="table-maziwa"></tbody>
+                    </table>
+                </div>
+
+                <h3>2. Saloon</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Watu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
+                        <tbody id="table-saloon"></tbody>
+                    </table>
+                </div>
+
+                <h3>3. Mgahawa</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Vitu Vilivyonunuliwa</th><th>Gharama ya Vitu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
+                        <tbody id="table-mgahawa"></tbody>
+                    </table>
+                </div>
+
+                <h3>4. Duka</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Bidhaa Zilizonunuliwa</th><th>Gharama ya Bidhaa</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
+                        <tbody id="table-duka"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ===== MWISHO WA SEHEMU ZA ZAMANI ZA HEAD OF DEPARTMENT ===== -->
 
             <div class="manager-section" style="background: #fdfefe; border: 1px solid #ddd; padding: 20px; border-radius: 8px; margin-top: 20px;">
                 <h3 style="color: var(--primary-color); margin-bottom: 15px;">Maoni kwa Supervisor wa Section</h3>
@@ -562,7 +556,7 @@
                         <input type="text" id="oda-kiasi-preview" readonly value="0">
                     </div>
                 </div>
-                <button type="button" onclick="submitMazwaOda()" class="btn-submit">Send Order to HoD</button>
+                <button type="button" onclick="submitMazwaOda()" class="btn-submit">Send Order to Head of School</button>
 
                 <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
 
@@ -582,7 +576,7 @@
         </div>
 
         <form id="expense-request-form" class="project-form" onsubmit="submitExpenseRequest(event)">
-            <h3 style="color: var(--warning-color);">Request Expenses to HoD</h3>
+            <h3 style="color: var(--warning-color);">Request Expenses to Head of School</h3>
             <div class="form-grid">
                 <div class="form-group"><label>Tarehe</label><input type="date" id="exp-t" required></div>
                 <div class="form-group">
