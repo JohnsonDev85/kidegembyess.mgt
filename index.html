@@ -184,6 +184,22 @@
                     <h3 style="color:#0f766e;">SALIO LA JUMLA LA HOSTEL (Ada Hostel + Ada Taaluma)</h3>
                     <div class="amount" id="accHostelBalance" style="color:#0f766e; font-size:2rem; font-weight:bold;">0 TZS</div>
                 </div>
+                <div class="card" style="border-left: 5px solid #0369a1; grid-column: 1 / -1;">
+                    <h3 style="color:#0369a1;">SALIO LA MASHINE (Pumba) - Tofauti na Hostel</h3>
+                    <div class="amount" id="accMashineBalance" style="color:#0369a1; font-size:2rem; font-weight:bold;">0 TZS</div>
+                </div>
+            </div>
+
+            <div class="table-section" style="margin-bottom: 25px;">
+                <h3 style="color: var(--primary-color);">Mauzo ya Mashine (Pumba) Yanayosubiri Approval</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Kiasi cha Pumba</th><th>Bei</th><th>Jumla Mauzo (TZS)</th><th>Msimamizi</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="accMashinePendingTable"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="settings-section" style="margin-bottom:25px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
@@ -200,7 +216,7 @@
             </div>
 
             <div class="table-section" style="margin-bottom: 25px;">
-                <h3 style="color: var(--primary-color);">Malipo ya Wanafunzi Yanayosubiri Approval</h3>
+                <h3 style="color: var(--primary-color);">Malipo ya Wanafunzi Yanayosubiri Approval (Taaluma + Michango Mingine)</h3>
                 <div class="data-table-container">
                     <table>
                         <thead>
@@ -251,7 +267,7 @@
             </div>
 
             <div class="table-section">
-                <h3 style="color: var(--primary-color);">Mchanganuo wa Miradi kwa Wiki Hii</h3>
+                <h3 style="color: var(--primary-color);">Mchanganuo wa Miradi kwa Siku</h3>
                 <div class="data-table-container">
                     <table>
                         <thead>
@@ -403,22 +419,98 @@
                 </form>
             </div>
 
-            <div class="settings-section" style="margin-bottom:25px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
-                <div class="form-group" style="margin:0;">
-                    <label style="font-weight:bold;">Chagua Muhula</label>
-                    <select id="hosHostelMuhulaSelect" onchange="renderHosHostelSummary()">
-                        <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
-                        <option value="Muhula wa Pili">Muhula wa Pili</option>
-                    </select>
+            <!-- ===== PAKIA ORODHA YA WANAFUNZI (EXCEL) ===== -->
+            <div class="settings-section" style="margin-bottom:25px;">
+                <h3 style="color:#8e44ad;">Upload list ya Wanafunzi (Excel)</h3>
+                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">
+                    Chagua Darasa kisha upload file la Excel (majina ya wanafunzi kwenye safu (column) ya kwanza, mstari mmoja kwa kila mwanafunzi).
+                    Hii itasaidia Msimamizi wa Hostel achague jina kwenye dropdown badala ya kuandika kwa mkono.
+                </p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Chagua Darasa</label>
+                        <select id="uploadDarasaSelect">
+                            <option value="Form 1">Form 1</option>
+                            <option value="Form 2">Form 2</option>
+                            <option value="Form 3">Form 3</option>
+                            <option value="Form 4">Form 4</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>File la Excel </label>
+                        <input type="file" id="uploadExcelFile" accept=".xlsx,.xls,.csv">
+                    </div>
                 </div>
-                <div>
-                    <h3 style="color:#2c3e50; margin:0;">Idadi ya Wanafunzi Waliolipia Ada ya Hostel: <span id="hosHostelStudentCount" style="color:#8e44ad;">0</span></h3>
-                </div>
-                <button onclick="printHostelStatement()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF Taarifa ya Hostel</button>
+                <button onclick="uploadWanafunziExcel()" class="btn-submit" style="background-color:#8e44ad;">Upload Wanafunzi</button>
+                <p id="uploadStatusMsg" style="margin-top:10px; font-size:0.9rem; font-weight:bold; color:#333;"></p>
+
+                <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+
+                <h4 style="color:#8e44ad; margin-bottom:5px;">Orodha ya Sasa (kwa Darasa)</h4>
+                <div id="wanafunziOrodhaContainer" style="margin-top:10px;"></div>
             </div>
 
-            <div class="table-section">
-                <h3 style="color: var(--warning-color); margin-bottom: 10px;">Maombi Yanayosubiri Uidhinishaji</h3>
+            <!-- ===== SUB-TABS: MASHINE | TAALUMA | MICHANGO MINGINE ===== -->
+            <div class="tabs" style="margin-bottom:20px;">
+                <button class="tab-btn active" id="hosHostelTabMashine" onclick="switchHosHostelSubTab('mashine')">Mashine</button>
+                <button class="tab-btn" id="hosHostelTabTaaluma" onclick="switchHosHostelSubTab('taaluma')">Taaluma</button>
+                <button class="tab-btn" id="hosHostelTabMichango" onclick="switchHosHostelSubTab('michango')">Michango Mingine</button>
+            </div>
+
+            <!-- ===== SUBTAB: MASHINE ===== -->
+            <div id="hosHostelMashineSubTab">
+                <div class="grid-summary" style="margin-bottom:20px;">
+                    <div class="card" style="border-left: 5px solid #0369a1; grid-column: 1 / -1;">
+                        <h3 style="color:#0369a1;">JUMLA YA MAUZO YA MASHINE (Yaliyothibitishwa)</h3>
+                        <div class="amount" id="hosMashineTotalSales" style="color:#0369a1; font-size:2rem; font-weight:bold;">0 TZS</div>
+                    </div>
+                </div>
+                <button onclick="printMashineReport()" class="btn-submit" style="background-color:#0369a1; width:auto; padding:10px 20px; margin-bottom:15px;"> Download PDF Ripoti ya Mashine</button>
+                <div class="table-section">
+                    <h3 style="color:#0369a1;">Rekodi za Mauzo ya Mashine (Pumba)</h3>
+                    <div class="data-table-container">
+                        <table>
+                            <thead><tr><th>Tarehe</th><th>Kiasi cha Pumba</th><th>Bei</th><th>Jumla Mauzo (TZS)</th><th>Msimamizi</th><th>Status</th></tr></thead>
+                            <tbody id="hosMashineTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== SUBTAB: TAALUMA ===== -->
+            <div id="hosHostelTaalumaSubTab" style="display:none;">
+                <div class="settings-section" style="margin-bottom:20px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-weight:bold;">Chagua Muhula</label>
+                        <select id="hosHostelMuhulaSelect" onchange="renderHosHostelSummary()">
+                            <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
+                            <option value="Muhula wa Pili">Muhula wa Pili</option>
+                        </select>
+                    </div>
+                    <div>
+                        <h3 style="color:#2c3e50; margin:0;">Idadi ya Wanafunzi Waliolipia Ada ya Hostel: <span id="hosHostelStudentCount" style="color:#8e44ad;">0</span></h3>
+                    </div>
+                    <button onclick="printTaalumaReport()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF - Taaluma</button>
+                </div>
+                <div class="table-section">
+                    <h3 style="color:#8e44ad;">Taaluma kwa Darasa</h3>
+                    <div id="hosTaalumaListContainer"></div>
+                </div>
+            </div>
+
+            <!-- ===== SUBTAB: MICHANGO MINGINE ===== -->
+            <div id="hosHostelMichangoSubTab" style="display:none;">
+                <div class="settings-section" style="margin-bottom:20px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+                    <button onclick="printMichangoMingineReport()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF - Michango Mingine</button>
+                </div>
+                <div class="table-section">
+                    <h3 style="color:#8e44ad;">Michango Mingine kwa Darasa (Ada Hostel, Mahindi, Maharage, Mchele)</h3>
+                    <div id="hosMichangoListContainer"></div>
+                </div>
+            </div>
+
+            <div class="table-section" style="margin-top:20px;">
+                <h3 style="color: var(--warning-color); margin-bottom: 10px;">Maombi ya Matumizi ya Hostel Yanayosubiri Uidhinishaji</h3>
                 <div class="data-table-container">
                     <table>
                         <thead>
@@ -613,6 +705,7 @@
                 <label style="font-weight:bold;">Aina ya Taarifa</label>
                 <select id="hostelTypeSelect" onchange="toggleHostelForm()">
                     <option value="malipo">Add Student</option>
+                    <option value="mashine">Mashine (Pumba)</option>
                     <option value="matumizi">Request Expenses</option>
                 </select>
             </div>
@@ -621,10 +714,9 @@
         <form id="form-hostel-student" class="project-form active" onsubmit="saveHostelStudent(event)">
             <h3 style="color:#047857;">Add student Aliyelipa Ada ya Hostel</h3>
             <div class="form-grid">
-                <div class="form-group"><label>Jina la Mwanafunzi</label><input type="text" id="hostel-jina-mwanafunzi" required></div>
                 <div class="form-group">
                     <label>Class</label>
-                    <select id="hostel-darasa">
+                    <select id="hostel-darasa" onchange="populateStudentDropdown()">
                         <option value="Form 1">Form 1</option>
                         <option value="Form 2">Form 2</option>
                         <option value="Form 3">Form 3</option>
@@ -632,10 +724,27 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Jina la Mwanafunzi</label>
+                    <select id="hostel-jina-mwanafunzi-select" onchange="onHostelStudentSelected()" required>
+                        <option value="">-- Chagua Mwanafunzi --</option>
+                    </select>
+                </div>
+                <div class="form-group" id="hostel-jina-manual-wrapper" style="display:none;">
+                    <label>Andika Jina la Mwanafunzi</label>
+                    <input type="text" id="hostel-jina-manual" placeholder="Jina kamili la mwanafunzi...">
+                </div>
+                <div class="form-group">
                     <label>Muhula</label>
                     <select id="hostel-muhula">
                         <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
                         <option value="Muhula wa Pili">Muhula wa Pili</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Njia ya Malipo</label>
+                    <select id="hostel-njia-malipo">
+                        <option value="Fedha Taslimu">Fedha Taslimu (Cash)</option>
+                        <option value="Rimu">Rimu Paper</option>
                     </select>
                 </div>
                 <div class="form-group"><label>Ada ya Hostel (TZS)</label><input type="number" id="hostel-ada-hostel" required min="0"></div>
@@ -645,6 +754,9 @@
                 <div class="form-group"><label>Mchele (Lita)</label><input type="number" id="hostel-mchele" required min="0"></div>
                 <div class="form-group"><label>Tarehe</label><input type="date" id="hostel-tarehe" required></div>
             </div>
+
+            <div id="studentHistoryContainer" style="display:none; margin-top:15px; background:#f9f5ff; padding:12px; border-radius:6px; border:1px solid #e9d8fd;"></div>
+
             <button type="submit" class="btn-submit" style="background-color:#059669;">Add Student</button>
         </form>
 
@@ -656,12 +768,38 @@
                     <option value="Muhula wa Pili">Muhula wa Pili</option>
                 </select>
             </div>
+            <div class="form-group" style="margin:0;">
+                <label style="font-weight:bold;">Chagua Darasa</label>
+                <select id="hostelSupervisorDarasaSelect">
+                    <option value="Yote">Darasa: Yote</option>
+                    <option value="Form 1">Form 1</option>
+                    <option value="Form 2">Form 2</option>
+                    <option value="Form 3">Form 3</option>
+                    <option value="Form 4">Form 4</option>
+                </select>
+            </div>
             <button id="hostelDebtorsBtn" onclick="printHostelDebtorsReport()" class="btn-submit" style="background-color:#b91c1c; width:auto; padding:10px 20px;"> Download Ripoti ya Wanafunzi Wanaodaiwa</button>
         </div>
 
         <div class="table-section" style="margin-top:20px;">
             <h3 style="color:#059669;">List of Added Students</h3>
             <div id="hostelStudentsListContainer"></div>
+        </div>
+
+        <form id="form-hostel-mashine" class="project-form" onsubmit="saveHostelMashine(event)">
+            <h3 style="color:#0369a1;">Mashine: Mauzo ya Pumba (Leo)</h3>
+            <div class="form-grid">
+                <div class="form-group"><label>Tarehe</label><input type="date" id="mashine-tarehe" required></div>
+                <div class="form-group"><label>Kiasi cha Pumba (Debe/Kg)</label><input type="number" id="mashine-kiasi" min="0" step="0.1" oninput="updateMashineJumlaPreview()" required></div>
+                <div class="form-group"><label>Bei kwa Kipimo (TZS)</label><input type="number" id="mashine-bei" min="0" oninput="updateMashineJumlaPreview()" required></div>
+                <div class="form-group"><label>Jumla ya Mauzo (TZS)</label><input type="text" id="mashine-jumla-preview" readonly value="0"></div>
+            </div>
+            <button type="submit" class="btn-submit" style="background-color:#0369a1;">Save Mauzo ya Mashine</button>
+        </form>
+
+        <div class="table-section" style="margin-top:20px;">
+            <h3 style="color:#0369a1;">Rekodi za Mashine (Pumba)</h3>
+            <div id="hostelMashineListContainer"></div>
         </div>
 
         <form id="form-hostel-matumizi" class="project-form" onsubmit="submitHostelExpense(event)">
@@ -705,6 +843,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="./script.js"></script>
 </div>
   </body>
