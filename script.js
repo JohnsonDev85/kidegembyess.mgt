@@ -24,7 +24,7 @@ const firestore = firebase.firestore();
 // isiendelee. try/catch hii inazuia hilo.
 try {
   firestore.settings({
-    experimentalForceLongPolling: true,
+    experimentalAutoDetectLongPolling: true,
     merge: true
   });
 } catch (e) {
