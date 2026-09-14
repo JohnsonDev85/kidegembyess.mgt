@@ -94,6 +94,52 @@
                 </div>
             </div>
 
+            <!-- ===== HAMISHA FEDHA KATI YA MIRADI (INTER-SECTION LENDING) ===== -->
+            <div class="settings-section" style="margin-bottom:25px;">
+                <h3 style="color: var(--primary-color);">Hamisha Fedha Kati ya Miradi</h3>
+                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">
+                    Chukua fedha kwenye salio la section moja uongeze kwenye salio la section nyingine.
+                    Deni hili litafuatiliwa na kurejeshwa kiotomatiki wakati section iliyokopa itakapopata mapato mapya yaliyothibitishwa.
+                </p>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Kutoka Section (Inayotoa)</label>
+                        <select id="loan-kutoka">
+                            <option value="maziwa">Maziwa</option>
+                            <option value="saloon">Saloon</option>
+                            <option value="mgahawa">Mgahawa</option>
+                            <option value="duka">Duka</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kwenda Section (Inayopokea)</label>
+                        <select id="loan-kwenda">
+                            <option value="saloon">Saloon</option>
+                            <option value="maziwa">Maziwa</option>
+                            <option value="mgahawa">Mgahawa</option>
+                            <option value="duka">Duka</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Kiasi (TZS)</label>
+                        <input type="number" id="loan-kiasi" min="1">
+                    </div>
+                    <div class="form-group" style="justify-content:flex-end;">
+                        <button type="button" onclick="transferSectionFunds()" class="btn-submit" style="margin-top:0;">Hamisha Sasa</button>
+                    </div>
+                </div>
+
+                <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
+
+                <h4 style="color:#555; margin-bottom:10px;">Madeni Kati ya Miradi</h4>
+                <div class="data-table-container">
+                    <table>
+                        <thead><tr><th>Tarehe</th><th>Kutoka</th><th>Kwenda</th><th>Kiasi cha Awali</th><th>Bado Linadaiwa</th><th>Status</th></tr></thead>
+                        <tbody id="sectionLoansTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- Makusanyo yanayosubiri uthibitisho -->
             <div class="table-section" style="margin-bottom: 25px;">
                 <h3 style="color: var(--primary-color);">Mapato (Kutoka kwa Supervisor) Yanayosubiri Approval </h3>
@@ -680,11 +726,27 @@
                         <option value="duka">Duka</option>
                     </select>
                 </div>
-                <div class="form-group"><label>Bidhaa/Kitu Kinachohitajika</label><input type="text" id="exp-jina" placeholder="Mfano: Kununua pumba, Spirit n.k" required></div>
-                <div class="form-group"><label>Gharama Inayohitajika (TZS)</label><input type="number" id="exp-gharama" required min="1"></div>
             </div>
-            <button type="submit" class="btn-submit" style="background-color: var(--warning-color);">Send Request</button>
+
+            <h4 style="margin-top:15px; color:#555;">Vitu Vinavyohitajika</h4>
+            <div class="form-grid">
+                <div class="form-group"><label>Jina la Kitu</label><input type="text" id="exp-item-jina" placeholder="Mfano: Sukari"></div>
+                <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="number" id="exp-item-bei" min="0"></div>
+                <div class="form-group" style="justify-content:flex-end;">
+                    <button type="button" onclick="addExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">+ Ongeza Kitu</button>
+                </div>
+            </div>
+
+            <div id="expenseItemsListContainer" style="margin:15px 0;"></div>
+            <div style="text-align:right; font-weight:bold; font-size:1.1rem; color:var(--warning-color);">Jumla: TZS <span id="expenseItemsTotal">0</span></div>
+
+            <button type="submit" class="btn-submit" style="background-color: var(--warning-color); margin-top:15px;">Send Request</button>
         </form>
+
+        <div class="table-section" style="margin-top:20px;">
+            <h3 style="color: var(--warning-color);">Historia ya Maombi Yangu ya Matumizi</h3>
+            <div id="myExpenseRequestsHistoryContainer"></div>
+        </div>
     </div>
 
     <!-- ================= HOSTEL MANAGER VIEW ================= -->
