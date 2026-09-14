@@ -556,17 +556,16 @@ function saveSaloonSales(e) {
 
 function saveMgahawaSales(e) {
     e.preventDefault();
-    let gh = parseFloat(document.getElementById('mgahawa-gh').value) || 0;
     let mauzo = parseFloat(document.getElementById('mgahawa-p').value) || 0;
     let record = {
         tarehe: document.getElementById('mgahawa-t').value,
         msimamizi: supervisors.mgahawa,
-        vitu: document.getElementById('mgahawa-v').value,
-        gharama: gh,
+        vitu: "-",
+        gharama: 0,
         mauzo: mauzo,
         mhasibu: parseFloat(document.getElementById('mgahawa-mhasibu').value) || 0,
         status_mhasibu: 'pending',
-        matumizi_jina: "No any", matumizi_gharama: 0, faida: mauzo - gh
+        matumizi_jina: "No any", matumizi_gharama: 0, faida: mauzo
     };
     firestore.collection('mgahawa').add(record)
       .then(() => saveAndRefresh('form-mgahawa-sales'))
@@ -575,17 +574,16 @@ function saveMgahawaSales(e) {
 
 function saveDukaSales(e) {
     e.preventDefault();
-    let gh = parseFloat(document.getElementById('duka-gh').value) || 0;
     let mauzo = parseFloat(document.getElementById('duka-p').value) || 0;
     let record = {
         tarehe: document.getElementById('duka-t').value,
         msimamizi: supervisors.duka,
-        vitu: document.getElementById('duka-v').value,
-        gharama: gh,
+        vitu: "-",
+        gharama: 0,
         mauzo: mauzo,
         mhasibu: parseFloat(document.getElementById('duka-mhasibu').value) || 0,
         status_mhasibu: 'pending',
-        matumizi_jina: "No-any", matumizi_gharama: 0, faida: mauzo - gh
+        matumizi_jina: "No-any", matumizi_gharama: 0, faida: mauzo
     };
     firestore.collection('duka').add(record)
       .then(() => saveAndRefresh('form-duka-sales'))
