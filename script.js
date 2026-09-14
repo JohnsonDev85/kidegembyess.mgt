@@ -253,8 +253,8 @@ function startListeners() {
   }
 
   // ===== MAOMBI YA MATUMIZI (requests) =====
-  // Inahitajika na: HOS (kuidhinisha), Mhasibu (kutoa fedha)
-  if (role === 'hos' || role === 'accountant') {
+  // Inahitajika na: HOS (kuidhinisha), Mhasibu (kutoa fedha), Supervisor (historia yake mwenyewe)
+  if (role === 'hos' || role === 'accountant' || role === 'supervisor') {
     firestore.collection('requests').limit(300).onSnapshot(snapshot => {
       requests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
       renderAdminRequests();
@@ -263,6 +263,7 @@ function startListeners() {
       calculateAccountantBalances();
       if (currentRole === 'hos') calculateHosDailyDashboard();
       if (currentRole === 'accountant') renderAccountantDashboard();
+      if (currentRole === 'supervisor') renderMyExpenseRequestsHistory();
     });
   }
 
@@ -387,6 +388,14 @@ function startListeners() {
     });
   }
 
+  // ===== DENI KATI YA MIRADI (section_loans) - Mhasibu pekee =====
+  if (role === 'accountant') {
+    firestore.collection('section_loans').limit(200).onSnapshot(snapshot => {
+      sectionLoans = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderAccountantDashboard();
+    });
+  }
+
   // ===== ORODHA YA WANAFUNZI (kwa dropdown ya Hostel) =====
   // Inahitajika na: HOS (kusimamia/kupakia Excel), Msimamizi wa Hostel (dropdown)
   if (role === 'hos' || role === 'hostelmanager') {
@@ -469,6 +478,8 @@ function switchRole() {
 
     if (role === 'manager') {
         toggleForm();
+        renderExpenseItemsList();
+        renderMyExpenseRequestsHistory();
     }
     if (role === 'hostelmanager') {
         loadHostelInfo();
@@ -601,23 +612,124 @@ function deleteRecord(collection, id) {
     }
 }
 
-// ===== EXPENSE REQUESTS =====
+// ===== EXPENSE REQUESTS: VITU VINGI + BEI YA KILA KIMOJA =====
+let currentExpenseItems = [];
+
+function addExpenseItem() {
+    const jinaInput = document.getElementById('exp-item-jina');
+    const beiInput = document.getElementById('exp-item-bei');
+    const jina = jinaInput.value.trim();
+    const bei = parseFloat(beiInput.value) || 0;
+
+    if (!jina) { alert("Andika jina la kitu kwanza!"); return; }
+    if (bei <= 0) { alert("Weka bei ya kitu!"); return; }
+
+    currentExpenseItems.push({ jina, bei });
+    jinaInput.value = '';
+    beiInput.value = '';
+    jinaInput.focus();
+    renderExpenseItemsList();
+}
+
+function removeExpenseItem(index) {
+    currentExpenseItems.splice(index, 1);
+    renderExpenseItemsList();
+}
+
+function renderExpenseItemsList() {
+    const container = document.getElementById('expenseItemsListContainer');
+    const totalEl = document.getElementById('expenseItemsTotal');
+    if (!container || !totalEl) return;
+
+    if (currentExpenseItems.length === 0) {
+        container.innerHTML = `<p style="color:#999; font-size:0.9rem;">Hakuna kitu kilichoongezwa bado.</p>`;
+        totalEl.innerText = '0';
+        return;
+    }
+
+    container.innerHTML = `<div class="data-table-container" style="margin-top:0;">
+        <table>
+            <thead><tr><th>Jina la Kitu</th><th>Bei (TZS)</th><th>Action</th></tr></thead>
+            <tbody>
+                ${currentExpenseItems.map((it, i) => `<tr>
+                    <td>${it.jina}</td>
+                    <td>${it.bei.toLocaleString()}</td>
+                    <td><button type="button" onclick="removeExpenseItem(${i})" style="background:#e74c3c;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px;">✕</button></td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+    </div>`;
+
+    const total = currentExpenseItems.reduce((t, it) => t + it.bei, 0);
+    totalEl.innerText = total.toLocaleString();
+}
+
 function submitExpenseRequest(e) {
     e.preventDefault();
+
+    if (currentExpenseItems.length === 0) {
+        alert("Ongeza angalau kitu kimoja kwenye orodha kabla ya kutuma!");
+        return;
+    }
+
     const idara = document.getElementById('exp-idara').value;
+    const total = currentExpenseItems.reduce((t, it) => t + it.bei, 0);
+
     const record = {
         tarehe: document.getElementById('exp-t').value,
         idara: idara,
         msimamizi: supervisors[idara] || "Not-found",
-        jina: document.getElementById('exp-jina').value,
-        gharama: parseFloat(document.getElementById('exp-gharama').value) || 0,
+        vitu: [...currentExpenseItems],
+        jina: currentExpenseItems.map(it => it.jina).join(', '),
+        gharama: total,
         status: 'pending',
         status_fedha: 'unpaid'
     };
     firestore.collection('requests').add(record).then(() => {
         document.getElementById('expense-request-form').reset();
+        currentExpenseItems = [];
+        renderExpenseItemsList();
         alert("Request has been successifully sent to Head of School!");
     }).catch(e => alert("Kosa: " + e.message));
+}
+
+// Historia ya maombi ya Supervisor mwenyewe - inaonyesha mchanganuo wa vitu (Supervisor pekee)
+function renderMyExpenseRequestsHistory() {
+    const container = document.getElementById('myExpenseRequestsHistoryContainer');
+    if (!container) return;
+
+    const myRequests = [...requests].sort((a, b) => (b.tarehe || '').localeCompare(a.tarehe || ''));
+
+    if (myRequests.length === 0) {
+        container.innerHTML = `<p style="color:#999; text-align:center; padding:15px;">Hakuna maombi bado.</p>`;
+        return;
+    }
+
+    const statusLabel = (r) => {
+        if (r.status === 'approved') return r.status_fedha === 'paid'
+            ? `<span style="color:green; font-weight:bold;">Imelipwa</span>`
+            : `<span style="color:#e67e22; font-weight:bold;">Imekubaliwa - Inasubiri Fedha</span>`;
+        if (r.status === 'rejected') return `<span style="color:#c0392b; font-weight:bold;">Imekataliwa</span>`;
+        return `<span style="color:#999; font-weight:bold;">Inasubiri HOS</span>`;
+    };
+
+    container.innerHTML = myRequests.slice(0, 50).map(r => {
+        const vitu = Array.isArray(r.vitu) && r.vitu.length > 0 ? r.vitu : [{ jina: r.jina, bei: r.gharama }];
+        const rows = vitu.map(v => `<tr><td>${v.jina}</td><td>${(v.bei || 0).toLocaleString()}</td></tr>`).join('');
+        return `<div style="margin-top:12px; background:#fff; border-left:5px solid var(--warning-color); border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); padding:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <strong style="text-transform:capitalize;">${r.idara} - ${r.tarehe}</strong>
+                ${statusLabel(r)}
+            </div>
+            <div class="data-table-container" style="margin-top:8px;">
+                <table style="font-size:0.85rem;">
+                    <thead><tr><th>Kitu</th><th>Bei (TZS)</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            <div style="text-align:right; font-weight:bold; margin-top:5px;">Jumla: ${(r.gharama || 0).toLocaleString()} TZS</div>
+        </div>`;
+    }).join('');
 }
 
 function renderAdminRequests() {
@@ -690,6 +802,9 @@ function renderTables() {
 // ===== BURSAR / ACCOUNTANT LOGIC SYSTEM =====
 let cachedBalances = { maziwa: 0, saloon: 0, mgahawa: 0, duka: 0, total: 0 };
 
+// ===== HAMISHA FEDHA KATI YA MIRADI (INTER-SECTION LENDING) =====
+let sectionLoans = [];
+
 function calculateAccountantBalances() {
     ['maziwa', 'saloon', 'mgahawa', 'duka'].forEach(section => {
         let confirmedIncome = db[section]
@@ -704,7 +819,16 @@ function calculateAccountantBalances() {
             .filter(r => r.idara === section && r.status === 'approved' && r.status_fedha === 'paid')
             .reduce((total, r) => total + (r.gharama || 0), 0);
 
-        cachedBalances[section] = confirmedIncome - paidExpenses;
+        // Deni kati ya miradi: fedha ulizotoa (lentOut) zinapunguza salio lako,
+        // fedha ulizopokea (borrowed) zinaongeza salio lako - hadi zitakapolipwa.
+        const lentOut = sectionLoans
+            .filter(l => l.kutoka === section)
+            .reduce((t, l) => t + (l.kiasi_kilichobaki || 0), 0);
+        const borrowed = sectionLoans
+            .filter(l => l.kwenda === section)
+            .reduce((t, l) => t + (l.kiasi_kilichobaki || 0), 0);
+
+        cachedBalances[section] = confirmedIncome - paidExpenses - lentOut + borrowed;
     });
 
     cachedBalances.total = cachedBalances.maziwa + cachedBalances.saloon + cachedBalances.mgahawa + cachedBalances.duka;
@@ -722,8 +846,85 @@ function calculateAccountantBalances() {
     if(bTotal) bTotal.innerText = cachedBalances.total.toLocaleString() + " TZS";
 }
 
+// Inaunda "deni" jipya kati ya miradi miwili (Mhasibu anachagua mwenyewe)
+function transferSectionFunds() {
+    const kutoka = document.getElementById('loan-kutoka').value;
+    const kwenda = document.getElementById('loan-kwenda').value;
+    const kiasi = parseFloat(document.getElementById('loan-kiasi').value) || 0;
+
+    if (kutoka === kwenda) { alert("Chagua sections mbili tofauti!"); return; }
+    if (kiasi <= 0) { alert("Weka kiasi sahihi cha kuhamisha!"); return; }
+
+    firestore.collection('section_loans').add({
+        kutoka: kutoka,
+        kwenda: kwenda,
+        kiasi: kiasi,
+        kiasi_kilichobaki: kiasi,
+        tarehe: new Date().toISOString().split('T')[0],
+        status: 'open'
+    }).then(() => {
+        document.getElementById('loan-kiasi').value = '';
+        alert(`✅ TZS ${kiasi.toLocaleString()} imehamishwa kutoka ${kutoka.toUpperCase()} kwenda ${kwenda.toUpperCase()}!`);
+    }).catch(e => alert("Kosa: " + e.message));
+}
+
+function renderSectionLoansTable() {
+    const tbody = document.getElementById('sectionLoansTable');
+    if (!tbody) return;
+
+    if (sectionLoans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#999;">Hakuna deni kati ya miradi.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = [...sectionLoans]
+        .sort((a, b) => (b.tarehe || '').localeCompare(a.tarehe || ''))
+        .map(l => `
+            <tr>
+                <td>${l.tarehe}</td>
+                <td style="text-transform:capitalize;">${l.kutoka}</td>
+                <td style="text-transform:capitalize;">${l.kwenda}</td>
+                <td>${(l.kiasi || 0).toLocaleString()}</td>
+                <td style="font-weight:bold; color:${(l.kiasi_kilichobaki||0) > 0 ? '#c0392b' : 'green'};">${(l.kiasi_kilichobaki || 0).toLocaleString()}</td>
+                <td>${(l.kiasi_kilichobaki||0) > 0 ? 'Bado Linadaiwa' : '✅ Limelipwa'}</td>
+            </tr>`).join('');
+}
+
+// Wakati section inayodaiwa ikipata mapato mapya yaliyothibitishwa, deni linalipwa
+// kiotomatiki (kuanzia deni la zamani zaidi), kiasi kilichobaki kinaenda kwenye salio lake.
+function autoSettleSectionLoans(section, incomeAmount) {
+    if (!incomeAmount || incomeAmount <= 0) return;
+
+    const openLoans = sectionLoans
+        .filter(l => l.kwenda === section && (l.kiasi_kilichobaki || 0) > 0)
+        .sort((a, b) => (a.tarehe || '').localeCompare(b.tarehe || ''));
+
+    if (openLoans.length === 0) return;
+
+    let remaining = incomeAmount;
+    const batch = firestore.batch();
+    let anyUpdate = false;
+
+    openLoans.forEach(loan => {
+        if (remaining <= 0) return;
+        const pay = Math.min(remaining, loan.kiasi_kilichobaki);
+        const newRemaining = loan.kiasi_kilichobaki - pay;
+        batch.update(firestore.collection('section_loans').doc(loan.id), {
+            kiasi_kilichobaki: newRemaining,
+            status: newRemaining <= 0 ? 'imelipwa' : 'open'
+        });
+        remaining -= pay;
+        anyUpdate = true;
+    });
+
+    if (anyUpdate) {
+        batch.commit().catch(e => console.error("Kosa kurejesha deni kiotomatiki:", e.message));
+    }
+}
+
 function renderAccountantDashboard() {
     calculateAccountantBalances();
+    renderSectionLoansTable();
 
     const pendingCollectionsTable = document.getElementById('accountantPendingCollectionsTable');
     if (pendingCollectionsTable) {
@@ -764,8 +965,12 @@ function renderAccountantDashboard() {
 }
 
 function approveCollection(section, id) {
+    const record = db[section].find(d => d.id === id);
     firestore.collection(section).doc(id).update({ status_mhasibu: 'approved' })
-    .then(() => alert("Mapato yamethibitishwa na kuingizwa kwenye salio la mradi!"))
+    .then(() => {
+        alert("Mapato yamethibitishwa na kuingizwa kwenye salio la mradi!");
+        if (record) autoSettleSectionLoans(section, record.mhasibu || 0);
+    })
     .catch(e => alert("Kosa: " + e.message));
 }
 
@@ -774,8 +979,8 @@ function disburseExpense(id) {
     if (!req) return;
 
     if (cachedBalances[req.idara] < req.gharama) {
-        alert(`❌ Salio la mradi wa ${req.idara.toUpperCase()} halitoshi kutoa TZS ${req.gharama.toLocaleString()}!`);
-        return;
+        const endelee = confirm(`⚠️ Salio la mradi wa ${req.idara.toUpperCase()} halitoshi (linasoma ${cachedBalances[req.idara].toLocaleString()} TZS) kutoa TZS ${req.gharama.toLocaleString()}. Ukiendelea, salio litakuwa hasi (negative). Unataka kuendelea?`);
+        if (!endelee) return;
     }
 
     firestore.collection('requests').doc(id).update({ status_fedha: 'paid' })
