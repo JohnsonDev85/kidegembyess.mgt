@@ -326,17 +326,6 @@
                 </div>
             </div>
 
-            <div class="grid-summary">
-                <div class="card maziwa" style="border-left: 5px solid #2980b9;">
-                    <h3>Total Makusanyo (Section Zote)</h3>
-                    <div class="amount" id="hos-total-sales" style="color: #2980b9;">0 TZS</div>
-                </div>
-                <div class="card mgahawa" style="border-left: 5px solid #27ae60;">
-                    <h3>Total Faida</h3>
-                    <div class="amount" id="hos-total-profit" style="color: #27ae60;">0 TZS</div>
-                </div>
-            </div>
-
             <div class="table-section">
                 <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
                     <h3 style="color: var(--primary-color); margin:0;">Mchanganuo wa Miradi kwa Tarehe</h3>
@@ -360,11 +349,33 @@
                 </div>
             </div>
 
+            <div class="grid-summary">
+                <div class="card maziwa" style="border-left: 5px solid #2980b9;">
+                    <h3>Total Makusanyo (Section Zote)</h3>
+                    <div class="amount" id="hos-total-sales" style="color: #2980b9;">0 TZS</div>
+                </div>
+                <div class="card mgahawa" style="border-left: 5px solid #27ae60;">
+                    <h3>Total Faida</h3>
+                    <div class="amount" id="hos-total-profit" style="color: #27ae60;">0 TZS</div>
+                </div>
+            </div>
+
             <!-- ===== ZILIZOKUWA SEHEMU ZA HEAD OF DEPARTMENT (SASA CHINI YA HOS) ===== -->
 
             <div class="settings-section" style="margin-top:25px;">
-                <h3 style="color: var(--primary-color); margin-bottom: 10px;">Set Supervisors</h3>
-                <form id="supervisorForm" onsubmit="saveSupervisors(event)">
+                <div id="hosSupervisorsDisplay" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                    <div>
+                        <h3 style="color: var(--primary-color); margin:0 0 8px 0;">Wasimamizi wa Sections</h3>
+                        <div style="display:flex; gap:20px; flex-wrap:wrap; font-size:0.95rem;">
+                            <span><strong>Maziwa:</strong> <span id="hosSupervisorDisplayMaziwa">-</span></span>
+                            <span><strong>Saloon:</strong> <span id="hosSupervisorDisplaySaloon">-</span></span>
+                            <span><strong>Mgahawa:</strong> <span id="hosSupervisorDisplayMgahawa">-</span></span>
+                            <span><strong>Duka:</strong> <span id="hosSupervisorDisplayDuka">-</span></span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="toggleHosSupervisorsEdit()" class="btn-submit" style="width:auto; padding:6px 16px; background-color:#7f8c8d; margin-top:0;">✏️ Edit</button>
+                </div>
+                <form id="supervisorForm" onsubmit="saveSupervisors(event)" style="display:none; margin-top:15px;">
                     <div class="form-grid">
                         <div class="form-group"><label>Msimamizi wa Maziwa</label><input type="text" id="set-msimamizi-maziwa" required></div>
                         <div class="form-group"><label>Msimamizi wa Saloon</label><input type="text" id="set-msimamizi-saloon" required></div>
@@ -372,6 +383,7 @@
                         <div class="form-group"><label>Msimamizi wa Duka</label><input type="text" id="set-msimamizi-duka" required></div>
                     </div>
                     <button type="submit" class="btn-submit" style="background-color: var(--primary-color);">Save Supervisors</button>
+                    <button type="button" onclick="toggleHosSupervisorsEdit()" style="background-color:#7f8c8d; color:white; border:none; padding:12px 20px; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:15px; margin-left:10px;">Cancel</button>
                 </form>
             </div>
 
@@ -497,17 +509,21 @@
         <div id="hosHostelSection" style="display:none;">
             <h2 class="section-title" style="color:#8e44ad;"> HOSTEL</h2>
 
+            <!-- ===== JINA LA MSIMAMIZI WA HOSTEL (Onyesha, na Edit ikihitajika) ===== -->
             <div class="settings-section" style="margin-bottom:25px;">
-                <h3 style="color:#8e44ad;">Weka Jina la Msimamizi wa Hostel</h3>
-                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">Msimamizi hataweza kuongeza taarifa yoyote ya hostel mpaka umweke jina lake.</p>
-                <form id="hosSetHostelSupervisorForm" onsubmit="hosSaveHostelSupervisorName(event)">
+                <div id="hosHostelSupervisorDisplay" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                    <h3 style="color:#8e44ad; margin:0;">Msimamizi wa Hostel: <span id="hosCurrentHostelSupervisorName" style="color:#2c3e50;">-</span></h3>
+                    <button type="button" onclick="toggleHosHostelSupervisorEdit()" class="btn-submit" style="width:auto; padding:6px 16px; background-color:#7f8c8d; margin-top:0;">✏️ Edit</button>
+                </div>
+                <form id="hosSetHostelSupervisorForm" onsubmit="hosSaveHostelSupervisorName(event)" style="display:none; margin-top:15px;">
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>Jina la Msimamizi wa Hostel</label>
+                            <label>Jina Jipya la Msimamizi wa Hostel</label>
                             <input type="text" id="hos-hostel-supervisor-name" required>
                         </div>
                     </div>
                     <button type="submit" class="btn-submit" style="background-color:#8e44ad;">Save Name</button>
+                    <button type="button" onclick="toggleHosHostelSupervisorEdit()" style="background-color:#7f8c8d; color:white; border:none; padding:12px 20px; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:15px; margin-left:10px;">Cancel</button>
                 </form>
             </div>
 
@@ -515,7 +531,7 @@
             <div class="settings-section" style="margin-bottom:25px;">
                 <h3 style="color:#8e44ad;">Upload list ya Wanafunzi (Excel)</h3>
                 <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">
-                    Chagua Darasa kisha upload file la Excel (majina ya wanafunzi kwenye safu (column) ya kwanza, mstari mmoja kwa kila mwanafunzi).
+                    Chagua Darasa kisha upload file la Excel. Kila mwanafunzi awe kwenye mstari mmoja, na jina lake liwe limegawanywa kwenye safu (column) tatu za kwanza (mfano: Jina la Kwanza | Jina la Kati | Jina la Ukoo). Mfumo utaunganisha majina hayo matatu kuwa jina moja kamili.
                     Hii itasaidia Msimamizi wa Hostel achague jina kwenye dropdown badala ya kuandika kwa mkono.
                 </p>
                 <div class="form-grid">
@@ -538,50 +554,46 @@
 
                 <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
 
-                <h4 style="color:#8e44ad; margin-bottom:5px;">Orodha ya Sasa (kwa Darasa)</h4>
-                <div id="wanafunziOrodhaContainer" style="margin-top:10px;"></div>
+                <h4 style="color:#8e44ad; margin-bottom:10px;">Idadi ya Wanafunzi Waliopakiwa (kwa Darasa)</h4>
+                <div id="wanafunziOrodhaCountsContainer" style="display:flex; gap:15px; flex-wrap:wrap;"></div>
+                <button type="button" id="toggleWanafunziOrodhaBtn" onclick="toggleWanafunziOrodhaView()" class="btn-submit" style="width:auto; padding:6px 16px; background-color:#7f8c8d; margin-top:15px;">👁️ View Uploaded Students</button>
+                <div id="wanafunziOrodhaContainer" style="display:none; margin-top:15px;"></div>
             </div>
 
-            <!-- ===== SUB-TABS: MASHINE | TAALUMA | MICHANGO MINGINE ===== -->
-            <div class="tabs" style="margin-bottom:20px;">
-                <button class="tab-btn active" id="hosHostelTabMashine" onclick="switchHosHostelSubTab('mashine')">Mashine</button>
-                <button class="tab-btn" id="hosHostelTabTaaluma" onclick="switchHosHostelSubTab('taaluma')">Taaluma</button>
-                <button class="tab-btn" id="hosHostelTabMichango" onclick="switchHosHostelSubTab('michango')">Michango Mingine</button>
-            </div>
-
-            <!-- ===== SUBTAB: MASHINE ===== -->
-            <div id="hosHostelMashineSubTab">
-                <div class="grid-summary" style="margin-bottom:20px;">
-                    <div class="card" style="border-left: 5px solid #0369a1; grid-column: 1 / -1;">
-                        <h3 style="color:#0369a1;">JUMLA YA MAUZO YA MASHINE (Yaliyothibitishwa)</h3>
-                        <div class="amount" id="hosMashineTotalSales" style="color:#0369a1; font-size:2rem; font-weight:bold;">0 TZS</div>
-                    </div>
+            <!-- ===== MASHINE (MAUZO YA PUMBA) ===== -->
+            <h3 style="color:#0369a1; margin-top:25px;">Mashine (Mauzo ya Pumba)</h3>
+            <div class="grid-summary" style="margin-bottom:20px;">
+                <div class="card" style="border-left: 5px solid #0369a1; grid-column: 1 / -1;">
+                    <h3 style="color:#0369a1;">JUMLA YA MAUZO YA MASHINE (Yaliyothibitishwa)</h3>
+                    <div class="amount" id="hosMashineTotalSales" style="color:#0369a1; font-size:2rem; font-weight:bold;">0 TZS</div>
                 </div>
-                <button onclick="printMashineReport()" class="btn-submit" style="background-color:#0369a1; width:auto; padding:10px 20px; margin-bottom:15px;"> Download PDF Ripoti ya Mashine</button>
-                <div class="table-section">
-                    <h3 style="color:#0369a1;">Rekodi za Mauzo ya Mashine (Pumba)</h3>
-                    <div class="data-table-container">
-                        <table>
-                            <thead><tr><th>Tarehe</th><th>Kiasi cha Pumba</th><th>Bei</th><th>Jumla Mauzo (TZS)</th><th>Msimamizi</th><th>Status</th></tr></thead>
-                            <tbody id="hosMashineTable"></tbody>
-                        </table>
-                    </div>
+            </div>
+            <button onclick="printMashineReport()" class="btn-submit" style="background-color:#0369a1; width:auto; padding:10px 20px; margin-bottom:15px;"> Download PDF Ripoti ya Mashine</button>
+            <div class="table-section">
+                <h3 style="color:#0369a1;">Rekodi za Mauzo ya Mashine (Pumba)</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead><tr><th>Tarehe</th><th>Kiasi cha Pumba</th><th>Bei</th><th>Jumla Mauzo (TZS)</th><th>Msimamizi</th><th>Status</th></tr></thead>
+                        <tbody id="hosMashineTable"></tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- ===== SUBTAB: TAALUMA ===== -->
-            <div id="hosHostelTaalumaSubTab" style="display:none;">
-                <div class="settings-section" style="margin-bottom:20px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
+            <!-- ===== RIPOTI ZA MALIPO (TAALUMA / MICHANGO MINGINE) - DOWNLOAD PEKEE ===== -->
+            <div class="settings-section" style="margin-top:25px;">
+                <h3 style="color:#8e44ad;">Ripoti za Malipo ya Hostel (Taaluma na Michango Mingine)</h3>
+                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">Chagua vigezo kisha download ripoti - Taaluma pekee, Michango Mingine pekee, au General (zote mbili). Sawa na jinsi Msimamizi wa Hostel anavyodownload.</p>
+                <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                     <div class="form-group" style="margin:0;">
                         <label style="font-weight:bold;">Chagua Muhula</label>
-                        <select id="hosHostelMuhulaSelect" onchange="renderHosHostelSummary(); renderHosTaalumaSubTab();">
+                        <select id="hosMuhulaSelect">
                             <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
                             <option value="Muhula wa Pili">Muhula wa Pili</option>
                         </select>
                     </div>
                     <div class="form-group" style="margin:0;">
-                        <label style="font-weight:bold;">Chagua Darasa (Download)</label>
-                        <select id="hosTaalumaDarasaSelect">
+                        <label style="font-weight:bold;">Chagua Darasa</label>
+                        <select id="hosDarasaSelect">
                             <option value="Yote">Darasa: Yote</option>
                             <option value="Form 1">Form 1</option>
                             <option value="Form 2">Form 2</option>
@@ -589,37 +601,16 @@
                             <option value="Form 4">Form 4</option>
                         </select>
                     </div>
-                    <div>
-                        <h3 style="color:#2c3e50; margin:0;">Idadi ya Wanafunzi Waliolipia Ada ya Hostel: <span id="hosHostelStudentCount" style="color:#8e44ad;">0</span></h3>
-                    </div>
-                    <button onclick="printTaalumaReport()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF</button>
-                    <button onclick="exportHosTaalumaExcel()" class="btn-submit" style="background-color:#1d7044; width:auto; padding:10px 20px;"> Download Excel</button>
-                </div>
-                <div class="table-section">
-                    <h3 style="color:#8e44ad;">Taaluma kwa Darasa (Idadi Pekee)</h3>
-                    <div id="hosTaalumaListContainer"></div>
-                </div>
-            </div>
-
-            <!-- ===== SUBTAB: MICHANGO MINGINE ===== -->
-            <div id="hosHostelMichangoSubTab" style="display:none;">
-                <div class="settings-section" style="margin-bottom:20px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                     <div class="form-group" style="margin:0;">
-                        <label style="font-weight:bold;">Chagua Darasa (Download)</label>
-                        <select id="hosMichangoDarasaSelect">
-                            <option value="Yote">Darasa: Yote</option>
-                            <option value="Form 1">Form 1</option>
-                            <option value="Form 2">Form 2</option>
-                            <option value="Form 3">Form 3</option>
-                            <option value="Form 4">Form 4</option>
+                        <label style="font-weight:bold;">Aina ya Ripoti</label>
+                        <select id="hosReportType">
+                            <option value="general">General (Taaluma + Michango Mingine)</option>
+                            <option value="taaluma">Taaluma Pekee</option>
+                            <option value="michango">Michango Mingine Pekee</option>
                         </select>
                     </div>
-                    <button onclick="printMichangoMingineReport()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF</button>
-                    <button onclick="exportHosMichangoExcel()" class="btn-submit" style="background-color:#1d7044; width:auto; padding:10px 20px;"> Download Excel</button>
-                </div>
-                <div class="table-section">
-                    <h3 style="color:#8e44ad;">Michango Mingine kwa Darasa (Idadi Pekee)</h3>
-                    <div id="hosMichangoListContainer"></div>
+                    <button onclick="printHosHostelReport()" class="btn-submit" style="background-color:#b91c1c; width:auto; padding:10px 20px;"> Download PDF</button>
+                    <button onclick="exportHosHostelReportExcel()" class="btn-submit" style="background-color:#1d7044; width:auto; padding:10px 20px;"> Download Excel</button>
                 </div>
             </div>
 
