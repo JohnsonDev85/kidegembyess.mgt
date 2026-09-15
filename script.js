@@ -189,7 +189,6 @@ let hostelMashineInitialized = false;
 let mashineBalance = 0;
 
 // ===== HOS: SUB-TAB YA HOSTEL (mashine | taaluma | michango) =====
-let currentHosHostelSubTab = 'mashine';
 
 // ===== ORODHA YA WANAFUNZI (kwa ajili ya dropdown ya Hostel) =====
 let wanafunziOrodha = [];
@@ -297,11 +296,6 @@ function startListeners() {
 
       renderHostelStudentsList();
       if (currentRole === 'accountant') renderHostelAccountantDashboard();
-      if (currentRole === 'hos') {
-        renderHosHostelSummary();
-        renderHosTaalumaSubTab();
-        renderHosMichangoSubTab();
-      }
       if (currentRole === 'hostelmanager') onHostelStudentSelected();
     });
   }
@@ -487,13 +481,13 @@ function switchRole() {
     }
     if (role === 'hos') {
         renderHostelRequests();
-        renderHosHostelSummary();
         renderAdminRequests();
         renderAdminApprovedExpenses();
         calculateHosDailyDashboard();
         calculateHosMonthlyProfit();
         loadSupervisors();
         renderWanafunziOrodhaManage();
+        renderHosMashineSubTab();
     }
     if (role === 'accountant') {
         renderAccountantDashboard();
@@ -512,8 +506,24 @@ function saveSupervisors(e) {
         duka: document.getElementById('set-msimamizi-duka').value
     };
     firestore.collection('settings').doc('supervisors').set(newSupervisors)
-      .then(() => alert("Supervisors are saved successifully!"))
+      .then(() => {
+          alert("Supervisors are saved successifully!");
+          const form = document.getElementById('supervisorForm');
+          const display = document.getElementById('hosSupervisorsDisplay');
+          if (form) form.style.display = 'none';
+          if (display) display.style.display = 'flex';
+      })
       .catch(e => alert("Kosa: " + e.message));
+}
+
+// Kuonesha/kuficha fomu ya kubadilisha Wasimamizi wa Sections
+function toggleHosSupervisorsEdit() {
+    const form = document.getElementById('supervisorForm');
+    const display = document.getElementById('hosSupervisorsDisplay');
+    if (!form) return;
+    const inaonekana = form.style.display !== 'none';
+    form.style.display = inaonekana ? 'none' : 'block';
+    if (display) display.style.display = inaonekana ? 'flex' : 'none';
 }
 
 // ===== SALES SUBMISSIONS =====
@@ -599,6 +609,16 @@ function loadSupervisors() {
     document.getElementById('m-saloon').value = supervisors.saloon || "Not-found";
     document.getElementById('m-mgahawa').value = supervisors.mgahawa || "Not-found";
     document.getElementById('m-duka').value = supervisors.duka || "Not-found";
+
+    // HOS: onyesho la majina ya sasa (read-only)
+    const dMaziwa = document.getElementById('hosSupervisorDisplayMaziwa');
+    const dSaloon = document.getElementById('hosSupervisorDisplaySaloon');
+    const dMgahawa = document.getElementById('hosSupervisorDisplayMgahawa');
+    const dDuka = document.getElementById('hosSupervisorDisplayDuka');
+    if (dMaziwa) dMaziwa.innerText = supervisors.maziwa || "Bado hajawekwa";
+    if (dSaloon) dSaloon.innerText = supervisors.saloon || "Bado hajawekwa";
+    if (dMgahawa) dMgahawa.innerText = supervisors.mgahawa || "Bado hajawekwa";
+    if (dDuka) dDuka.innerText = supervisors.duka || "Bado hajawekwa";
 }
 
 // ===== DELETE RECORD (generic) =====
@@ -1356,10 +1376,31 @@ function loadHostelInfo() {
 
     toggleHostelFormsAvailability(isSet);
 
+    // HOS: onyesho la jina la sasa (read-only)
+    const hosDisplay = document.getElementById('hosCurrentHostelSupervisorName');
+    if (hosDisplay) {
+        hosDisplay.innerText = isSet ? hostelInfo.msimamizi : "Bado hajawekwa";
+        hosDisplay.style.color = isSet ? '#2c3e50' : '#b91c1c';
+    }
+
     // Prefill HOS's own input field (bila kuathiri kama HOS anaandika sasa hivi)
     const hosInput = document.getElementById('hos-hostel-supervisor-name');
     if (hosInput && document.activeElement !== hosInput) {
         hosInput.value = isSet ? hostelInfo.msimamizi : "";
+    }
+}
+
+// Kuonesha/kuficha fomu ya kubadilisha jina la Msimamizi wa Hostel
+function toggleHosHostelSupervisorEdit() {
+    const form = document.getElementById('hosSetHostelSupervisorForm');
+    const display = document.getElementById('hosHostelSupervisorDisplay');
+    if (!form) return;
+    const inaonekana = form.style.display !== 'none';
+    form.style.display = inaonekana ? 'none' : 'block';
+    if (display) display.style.display = inaonekana ? 'flex' : 'none';
+    if (!inaonekana) {
+        const hosInput = document.getElementById('hos-hostel-supervisor-name');
+        if (hosInput) { hosInput.value = ''; hosInput.focus(); }
     }
 }
 
@@ -1385,7 +1426,13 @@ function hosSaveHostelSupervisorName(e) {
     const jina = document.getElementById('hos-hostel-supervisor-name').value.trim();
     if (!jina) { alert("Tafadhali andika jina la msimamizi!"); return; }
     firestore.collection('settings').doc('hostelInfo').set({ msimamizi: jina })
-      .then(() => alert("✅ Jina la Msimamizi wa Hostel Added!"))
+      .then(() => {
+          alert("✅ Jina la Msimamizi wa Hostel Added!");
+          const form = document.getElementById('hosSetHostelSupervisorForm');
+          const display = document.getElementById('hosHostelSupervisorDisplay');
+          if (form) form.style.display = 'none';
+          if (display) display.style.display = 'flex';
+      })
       .catch(e => alert("Kosa: " + e.message));
 }
 
@@ -1407,8 +1454,31 @@ function toggleHostelForm() {
 
 // ===== HOSTEL: ORODHA YA WANAFUNZI (kwa dropdown) =====
 
-// Inaonyesha/inasimamia orodha ya majina ya wanafunzi kwa kila darasa (HoS panel)
+// Inaonyesha idadi tu kwa kila darasa (HoS panel) - majina kamili yanaonekana kwa 'View Uploaded Students'
 function renderWanafunziOrodhaManage() {
+    const countsContainer = document.getElementById('wanafunziOrodhaCountsContainer');
+    const listContainer = document.getElementById('wanafunziOrodhaContainer');
+    if (!countsContainer) return;
+
+    let countsHtml = '';
+    DARASA_ORDER.forEach(darasa => {
+        const list = wanafunziOrodha.filter(w => w.darasa === darasa);
+        countsHtml += `<div style="background:#f3e8ff; border-radius:8px; padding:10px 16px; text-align:center; min-width:110px;">
+            <div style="font-weight:bold; color:#8e44ad;">${darasa}</div>
+            <div style="font-size:1.3rem; font-weight:bold; color:#2c3e50;">${list.length}</div>
+            <div style="font-size:0.7rem; color:#777;">wamepakiwa</div>
+        </div>`;
+    });
+    countsContainer.innerHTML = countsHtml;
+
+    // Kama orodha kamili tayari inaonekana (toggle ipo "wazi"), i-refresh pia
+    if (listContainer && listContainer.style.display !== 'none') {
+        renderWanafunziOrodhaFullList();
+    }
+}
+
+// Majina kamili, column tatu, yanaonekana tu HOS akibonyeza "View Uploaded Students"
+function renderWanafunziOrodhaFullList() {
     const container = document.getElementById('wanafunziOrodhaContainer');
     if (!container) return;
 
@@ -1430,7 +1500,24 @@ function renderWanafunziOrodhaManage() {
     container.innerHTML = html;
 }
 
+// Kuonesha/kuficha orodha kamili ya majina yaliyopakiwa
+function toggleWanafunziOrodhaView() {
+    const container = document.getElementById('wanafunziOrodhaContainer');
+    const btn = document.getElementById('toggleWanafunziOrodhaBtn');
+    if (!container) return;
+    const inaonekana = container.style.display !== 'none';
+    if (inaonekana) {
+        container.style.display = 'none';
+        if (btn) btn.innerText = '👁️ View Uploaded Students';
+    } else {
+        renderWanafunziOrodhaFullList();
+        container.style.display = 'block';
+        if (btn) btn.innerText = '🙈 Ficha Orodha';
+    }
+}
+
 // Kusoma faili la Excel na kuongeza majina Firestore (haziandiki tena jina lililopo)
+// Jina la mwanafunzi linasomwa kutoka safu (column) TATU za kwanza (mfano: Jina la Kwanza | Jina la Kati | Jina la Ukoo) na kuunganishwa kuwa jina moja.
 function uploadWanafunziExcel() {
     const darasaEl = document.getElementById('uploadDarasaSelect');
     const fileInput = document.getElementById('uploadExcelFile');
@@ -1468,20 +1555,29 @@ function uploadWanafunziExcel() {
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
 
-            // Chukua majina kwenye safu (column) ya kwanza, ruka mistari mitupu na header inayowezekana
+            // Unganisha safu (column) tatu za kwanza (Jina la Kwanza | Jina la Kati | Jina la Ukoo) kuwa jina moja
             let majina = [];
             rows.forEach(row => {
-                const val = row[0];
-                if (val === undefined || val === null) return;
-                const jina = String(val).trim();
+                if (!row) return;
+                const sehemu = [row[0], row[1], row[2]]
+                    .map(v => (v === undefined || v === null) ? '' : String(v).trim())
+                    .filter(v => v !== '');
+
+                if (sehemu.length === 0) return;
+
+                const jina = sehemu.join(' ').replace(/\s+/g, ' ').trim();
                 if (!jina) return;
-                if (jina.toLowerCase().includes('jina') || jina.toLowerCase() === 'name') return;
+
+                // Ruka mstari wa header (mfano "Jina la Kwanza", "First Name", n.k.)
+                const jinaLower = jina.toLowerCase();
+                if (jinaLower.includes('jina') || jinaLower.includes('name')) return;
+
                 majina.push(jina);
             });
 
             if (majina.length === 0) {
                 statusEl.style.color = '#c0392b';
-                statusEl.innerText = "❌ Hakuna majina yaliyopatikana kwenye file. Hakikisha majina yapo column ya kwanza.";
+                statusEl.innerText = "❌ Hakuna majina yaliyopatikana kwenye file. Hakikisha majina yapo kwenye safu tatu za kwanza.";
                 return;
             }
 
@@ -1951,14 +2047,20 @@ function approveMashineCollection(id) {
       .catch(e => alert("Kosa: " + e.message));
 }
 
-// ===== SUPERVISOR: Data iliyochujwa kwa ajili ya Ripoti ya Wanaodaiwa =====
-// Inatumika na PDF na Excel exports zote mbili, ili logic isirudiwe mara mbili.
-function getFilteredDebtorsData() {
-    const muhulaSelect = document.getElementById('hostelSupervisorMuhulaSelect');
+// ===== Data iliyochujwa kwa ajili ya Ripoti ya Wanaodaiwa =====
+// Inatumika na Msimamizi wa Hostel (scope='supervisor') na Head of School (scope='hos'),
+// na na PDF na Excel exports zote mbili, ili logic isirudiwe.
+function getFilteredDebtorsData(scope) {
+    scope = scope || 'supervisor';
+    const ids = scope === 'hos'
+        ? { muhula: 'hosMuhulaSelect', darasa: 'hosDarasaSelect', type: 'hosReportType' }
+        : { muhula: 'hostelSupervisorMuhulaSelect', darasa: 'hostelSupervisorDarasaSelect', type: 'hostelDebtorsReportType' };
+
+    const muhulaSelect = document.getElementById(ids.muhula);
     const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
-    const darasaSelect = document.getElementById('hostelSupervisorDarasaSelect');
+    const darasaSelect = document.getElementById(ids.darasa);
     const darasaFilter = darasaSelect ? darasaSelect.value : 'Yote';
-    const typeSelect = document.getElementById('hostelDebtorsReportType');
+    const typeSelect = document.getElementById(ids.type);
     const reportType = typeSelect ? typeSelect.value : 'general'; // general | taaluma | michango
 
     let wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
@@ -1984,9 +2086,10 @@ function reportTypeLabel(reportType) {
     return 'GENERAL (TAALUMA + MICHANGO MINGINE)';
 }
 
-// ===== SUPERVISOR: PDF ya Wanaodaiwa =====
-function printHostelDebtorsReport() {
-    const { muhula, darasaFilter, reportType, wanaodaiwa } = getFilteredDebtorsData();
+// ===== PDF ya Wanaodaiwa (Msimamizi wa Hostel au Head of School) =====
+function printHostelDebtorsReport(scope) {
+    scope = scope || 'supervisor';
+    const { muhula, darasaFilter, reportType, wanaodaiwa } = getFilteredDebtorsData(scope);
 
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
@@ -2076,21 +2179,25 @@ function printHostelDebtorsReport() {
     }
     doc.setFontSize(10);
     doc.setTextColor(50);
-    doc.text("Msimamizi wa Hostel: ____________________", 14, finalY);
+    doc.text(
+        (scope === 'hos' ? "Head of School: ____________________" : "Msimamizi wa Hostel: ____________________"),
+        14, finalY
+    );
 
     addPdfFooter(doc);
 
     doc.save(`Wanaodaiwa-${reportType}-${muhula.replace(/\s+/g,'-')}-${darasaFilter.replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-// ===== SUPERVISOR: EXCEL ya Wanaodaiwa (rahisi kuprint/kutuma kwa email) =====
-function exportHostelDebtorsExcel() {
+// ===== EXCEL ya Wanaodaiwa (rahisi kuprint/kutuma kwa email) - Msimamizi wa Hostel au Head of School =====
+function exportHostelDebtorsExcel(scope) {
+    scope = scope || 'supervisor';
     if (typeof XLSX === 'undefined') {
         alert("❌ Excel export haijapakia vizuri, jaribu kurefresh ukurasa.");
         return;
     }
 
-    const { muhula, darasaFilter, reportType, wanaodaiwa } = getFilteredDebtorsData();
+    const { muhula, darasaFilter, reportType, wanaodaiwa } = getFilteredDebtorsData(scope);
 
     if (wanaodaiwa.length === 0) {
         alert("Hakuna mwanafunzi anayedaiwa kwa vigezo hivi - hakuna cha ku-export.");
@@ -2148,6 +2255,14 @@ function exportHostelDebtorsExcel() {
     XLSX.writeFile(workbook, `Wanaodaiwa-${reportType}-${muhula.replace(/\s+/g,'-')}-${darasaFilter.replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
+// ===== HOS: Wrappers za download (zinatumia logic ile ile ya Msimamizi wa Hostel) =====
+function printHosHostelReport() {
+    printHostelDebtorsReport('hos');
+}
+function exportHosHostelReportExcel() {
+    exportHostelDebtorsExcel('hos');
+}
+
 // ===== HOS: TABS =====
 function switchHosTab(tab) {
     const miradiSection = document.getElementById('hosMiradiSection');
@@ -2162,9 +2277,8 @@ function switchHosTab(tab) {
         tabMiradi.classList.remove('active');
         tabHostel.classList.add('active');
         renderHostelRequests();
-        renderHosHostelSummary();
         renderWanafunziOrodhaManage();
-        switchHosHostelSubTab(currentHosHostelSubTab);
+        renderHosMashineSubTab();
     } else {
         miradiSection.style.display = 'block';
         hostelSection.style.display = 'none';
@@ -2225,42 +2339,7 @@ function rejectHostelExpense(id) {
       .catch(e => alert("Kosa: " + e.message));
 }
 
-// ===== HOS: Idadi ya wanafunzi kwa Muhula uliochaguliwa =====
-function renderHosHostelSummary() {
-    const muhulaSelect = document.getElementById('hosHostelMuhulaSelect');
-    const countEl = document.getElementById('hosHostelStudentCount');
-    if (muhulaSelect && countEl) {
-        const selectedMuhula = muhulaSelect.value;
-        const count = hostelMalipo.filter(d => d.muhula === selectedMuhula).length;
-        countEl.innerText = count;
-    }
-}
-
-// ===== HOS: SUB-TABS ZA HOSTEL (MASHINE | TAALUMA | MICHANGO MINGINE) =====
-function switchHosHostelSubTab(tab) {
-    currentHosHostelSubTab = tab;
-    const mashineSub = document.getElementById('hosHostelMashineSubTab');
-    const taalumaSub = document.getElementById('hosHostelTaalumaSubTab');
-    const michangoSub = document.getElementById('hosHostelMichangoSubTab');
-    const tabMashine = document.getElementById('hosHostelTabMashine');
-    const tabTaaluma = document.getElementById('hosHostelTabTaaluma');
-    const tabMichango = document.getElementById('hosHostelTabMichango');
-    if (!mashineSub || !taalumaSub || !michangoSub) return;
-
-    mashineSub.style.display = tab === 'mashine' ? 'block' : 'none';
-    taalumaSub.style.display = tab === 'taaluma' ? 'block' : 'none';
-    michangoSub.style.display = tab === 'michango' ? 'block' : 'none';
-
-    [tabMashine, tabTaaluma, tabMichango].forEach(btn => { if (btn) btn.classList.remove('active'); });
-    if (tab === 'mashine' && tabMashine) tabMashine.classList.add('active');
-    if (tab === 'taaluma' && tabTaaluma) tabTaaluma.classList.add('active');
-    if (tab === 'michango' && tabMichango) tabMichango.classList.add('active');
-
-    if (tab === 'mashine') renderHosMashineSubTab();
-    if (tab === 'taaluma') { renderHosHostelSummary(); renderHosTaalumaSubTab(); }
-    if (tab === 'michango') renderHosMichangoSubTab();
-}
-
+// ===== HOS: MASHINE (haihitaji tab, inaonekana moja kwa moja) =====
 function renderHosMashineSubTab() {
     const totalEl = document.getElementById('hosMashineTotalSales');
     const tbody = document.getElementById('hosMashineTable');
@@ -2280,70 +2359,6 @@ function renderHosMashineSubTab() {
             <td style="color:${d.status_mhasibu === 'approved' ? 'green' : 'orange'}; font-weight:bold;">${d.status_mhasibu === 'approved' ? 'Approved' : 'Pending'}</td>
         </tr>`;
     });
-}
-
-// HOS haoni tena orodha ya majina (inachafua muonekano) - anaona idadi tu kwa kila darasa.
-// Akitaka majina/details, anadownload PDF/Excel (chini ya filters za Muhula/Darasa).
-function renderHosTaalumaSubTab() {
-    const container = document.getElementById('hosTaalumaListContainer');
-    if (!container) return;
-
-    const muhulaSelect = document.getElementById('hosHostelMuhulaSelect');
-    const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
-    const wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
-
-    if (wanafunziMuhula.length === 0) {
-        container.innerHTML = `<p style="color:#999; text-align:center; padding:15px;">Hakuna taarifa kwa muhula huu.</p>`;
-        return;
-    }
-
-    const rows = DARASA_ORDER.map(darasa => {
-        const wanafunzi = wanafunziMuhula.filter(d => d.darasa === darasa);
-        if (wanafunzi.length === 0) return '';
-        const wamelipaKikamilifu = wanafunzi.filter(d => !hasTaalumaDeficiency(d)).length;
-        const wenyeDeni = wanafunzi.length - wamelipaKikamilifu;
-        return `<tr>
-            <td style="font-weight:bold;">${darasa}</td>
-            <td>${wanafunzi.length}</td>
-            <td style="color:green; font-weight:bold;">${wamelipaKikamilifu}</td>
-            <td style="color:${wenyeDeni > 0 ? '#c0392b' : '#555'}; font-weight:bold;">${wenyeDeni}</td>
-        </tr>`;
-    }).join('');
-
-    container.innerHTML = buildCategoryCard(
-        `Idadi ya Wanafunzi - ${muhula}`, '#8e44ad',
-        ['Darasa', 'Jumla ya Wanafunzi', 'Waliolipa Kikamilifu', 'Wenye Deni'],
-        rows
-    );
-}
-
-function renderHosMichangoSubTab() {
-    const container = document.getElementById('hosMichangoListContainer');
-    if (!container) return;
-
-    if (hostelMalipo.length === 0) {
-        container.innerHTML = `<p style="color:#999; text-align:center; padding:15px;">Hakuna taarifa.</p>`;
-        return;
-    }
-
-    const rows = DARASA_ORDER.map(darasa => {
-        const wanafunzi = hostelMalipo.filter(d => d.darasa === darasa);
-        if (wanafunzi.length === 0) return '';
-        const wamelipaKikamilifu = wanafunzi.filter(d => !hasMichangoDeficiency(d)).length;
-        const wenyeDeni = wanafunzi.length - wamelipaKikamilifu;
-        return `<tr>
-            <td style="font-weight:bold;">${darasa}</td>
-            <td>${wanafunzi.length}</td>
-            <td style="color:green; font-weight:bold;">${wamelipaKikamilifu}</td>
-            <td style="color:${wenyeDeni > 0 ? '#c0392b' : '#555'}; font-weight:bold;">${wenyeDeni}</td>
-        </tr>`;
-    }).join('');
-
-    container.innerHTML = buildCategoryCard(
-        `Idadi ya Wanafunzi (Ada Hostel, Mahindi, Maharage, Mchele)`, '#0f766e',
-        ['Darasa', 'Jumla ya Wanafunzi', 'Waliolipa Kikamilifu', 'Wenye Deni'],
-        rows
-    );
 }
 
 // ===== HOS: PDF - MASHINE =====
@@ -2395,235 +2410,9 @@ function printMashineReport() {
     doc.save(`Ripoti-Mashine-${new Date().toISOString().split('T')[0]}.pdf`);
 }
 
-// ===== HOS: PDF - TAALUMA =====
-function printTaalumaReport() {
-    const muhulaSelect = document.getElementById('hosHostelMuhulaSelect');
-    const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
-    const darasaSelect = document.getElementById('hosTaalumaDarasaSelect');
-    const darasaFilter = darasaSelect ? darasaSelect.value : 'Yote';
-    let wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
-    if (darasaFilter !== 'Yote') wanafunziMuhula = wanafunziMuhula.filter(d => d.darasa === darasaFilter);
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.setTextColor(142, 68, 173);
-    doc.text("KIDEGEMBYE SECONDARY SCHOOL", 105, 18, { align: "center" });
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text(`RIPOTI YA TAALUMA - ${muhula.toUpperCase()}`, 105, 25, { align: "center" });
-    doc.setFontSize(9);
-    doc.setTextColor(80);
-    doc.text(`Tarehe ya Ripoti: ${new Date().toLocaleDateString('en-GB')} | Darasa: ${darasaFilter}`, 195, 33, { align: "right" });
-
-    let currentY = 40;
-    let ndipoKunaData = false;
-    DARASA_ORDER.forEach(darasa => {
-        const group = wanafunziMuhula.filter(d => d.darasa === darasa);
-        if (group.length === 0) return;
-        ndipoKunaData = true;
-
-        if (currentY > doc.internal.pageSize.height - 50) {
-            doc.addPage();
-            currentY = 20;
-        }
-
-        doc.setFontSize(11);
-        doc.setTextColor(142, 68, 173);
-        doc.text(darasa, 14, currentY);
-
-        doc.autoTable({
-            startY: currentY + 3,
-            head: [["Jina la Mwanafunzi", "Ada Taaluma - Alicholipa (Deni)", "Rimu", "Status"]],
-            body: group.map(d => [
-                d.jina_mwanafunzi,
-                formatCellWithDeni(d.ada_taaluma, HOSTEL_REQUIRED.ada_taaluma, true),
-                d.njia_malipo || '-',
-                d.status_mhasibu === 'approved' ? 'Approved' : 'Pending'
-            ]),
-            theme: 'striped',
-            headStyles: { fillColor: [142, 68, 173] },
-            styles: { fontSize: 9 },
-            didParseCell: hostelDeniCellStyler
-        });
-
-        currentY = doc.lastAutoTable.finalY + 15;
-    });
-
-    if (!ndipoKunaData) {
-        doc.setFontSize(11);
-        doc.setTextColor(50);
-        doc.text("Hakuna taarifa za Taaluma kwa muhula huu.", 14, 45);
-        currentY = 55;
-    }
-
-    if (currentY > doc.internal.pageSize.height - 30) {
-        doc.addPage();
-        currentY = 30;
-    }
-    doc.setFontSize(10);
-    doc.setTextColor(50);
-    doc.text("Head of School: ____________________", 14, currentY);
-
-    addPdfFooter(doc);
-    doc.save(`Taaluma-${muhula.replace(/\s+/g,'-')}-${darasaFilter.replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.pdf`);
-}
-
-// ===== HOS: EXCEL - TAALUMA =====
-function exportHosTaalumaExcel() {
-    if (typeof XLSX === 'undefined') {
-        alert("❌ Excel export haijapakia vizuri, jaribu kurefresh ukurasa.");
-        return;
-    }
-    const muhulaSelect = document.getElementById('hosHostelMuhulaSelect');
-    const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
-    const darasaSelect = document.getElementById('hosTaalumaDarasaSelect');
-    const darasaFilter = darasaSelect ? darasaSelect.value : 'Yote';
-    let wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
-    if (darasaFilter !== 'Yote') wanafunziMuhula = wanafunziMuhula.filter(d => d.darasa === darasaFilter);
-
-    if (wanafunziMuhula.length === 0) {
-        alert("Hakuna taarifa za Taaluma kwa vigezo hivi - hakuna cha ku-export.");
-        return;
-    }
-
-    const rows = wanafunziMuhula.map(d => ({
-        "Jina la Mwanafunzi": d.jina_mwanafunzi,
-        "Darasa": d.darasa,
-        "Muhula": d.muhula,
-        "Ada Taaluma Alicholipa": d.ada_taaluma || 0,
-        "Ada Taaluma Inayotakiwa": HOSTEL_REQUIRED.ada_taaluma,
-        "Deni la Taaluma": Math.min(0, (d.ada_taaluma || 0) - HOSTEL_REQUIRED.ada_taaluma),
-        "Rimu": d.njia_malipo || '-',
-        "Tarehe": d.tarehe,
-        "Status": d.status_mhasibu === 'approved' ? 'Approved' : 'Pending'
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Taaluma");
-    XLSX.writeFile(workbook, `Taaluma-${muhula.replace(/\s+/g,'-')}-${darasaFilter.replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.xlsx`);
-}
-
-// ===== HOS: PDF - MICHANGO MINGINE =====
-function printMichangoMingineReport() {
-    const muhulaSelect = document.getElementById('hosHostelMuhulaSelect');
-    const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
-    const darasaSelect = document.getElementById('hosMichangoDarasaSelect');
-    const darasaFilter = darasaSelect ? darasaSelect.value : 'Yote';
-    let wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
-    if (darasaFilter !== 'Yote') wanafunziMuhula = wanafunziMuhula.filter(d => d.darasa === darasaFilter);
-
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-
-    doc.setFontSize(16);
-    doc.setTextColor(15, 118, 110);
-    doc.text("KIDEGEMBYE SECONDARY SCHOOL", 105, 18, { align: "center" });
-    doc.setFontSize(11);
-    doc.setTextColor(100);
-    doc.text(`RIPOTI YA MICHANGO MINGINE - ${muhula.toUpperCase()}`, 105, 25, { align: "center" });
-    doc.setFontSize(9);
-    doc.setTextColor(80);
-    doc.text(`Tarehe ya Ripoti: ${new Date().toLocaleDateString('en-GB')} | Darasa: ${darasaFilter}`, 195, 33, { align: "right" });
-
-    let currentY = 40;
-    let ndipoKunaData = false;
-    DARASA_ORDER.forEach(darasa => {
-        const group = wanafunziMuhula.filter(d => d.darasa === darasa);
-        if (group.length === 0) return;
-        ndipoKunaData = true;
-
-        if (currentY > doc.internal.pageSize.height - 50) {
-            doc.addPage();
-            currentY = 20;
-        }
-
-        doc.setFontSize(11);
-        doc.setTextColor(15, 118, 110);
-        doc.text(darasa, 14, currentY);
-
-        doc.autoTable({
-            startY: currentY + 3,
-            head: [["Jina la Mwanafunzi", "Ada Hostel", "Mahindi", "Maharage", "Mchele", "Rimu", "Status"]],
-            body: group.map(d => [
-                d.jina_mwanafunzi,
-                formatCellWithDeni(d.ada_hostel, HOSTEL_REQUIRED.ada_hostel, true),
-                formatCellWithDeni(d.mahindi, HOSTEL_REQUIRED.mahindi, false),
-                formatCellWithDeni(d.maharage, HOSTEL_REQUIRED.maharage, false),
-                formatCellWithDeni(d.mchele, HOSTEL_REQUIRED.mchele, false),
-                d.njia_malipo || '-',
-                d.status_mhasibu === 'approved' ? 'Approved' : 'Pending'
-            ]),
-            theme: 'striped',
-            headStyles: { fillColor: [15, 118, 110] },
-            styles: { fontSize: 9 },
-            didParseCell: hostelDeniCellStyler
-        });
-
-        currentY = doc.lastAutoTable.finalY + 15;
-    });
-
-    if (!ndipoKunaData) {
-        doc.setFontSize(11);
-        doc.setTextColor(50);
-        doc.text("Hakuna taarifa za Michango Mingine kwa muhula huu.", 14, 45);
-        currentY = 55;
-    }
-
-    if (currentY > doc.internal.pageSize.height - 30) {
-        doc.addPage();
-        currentY = 30;
-    }
-    doc.setFontSize(10);
-    doc.setTextColor(50);
-    doc.text("Head of School: ____________________", 14, currentY);
-
-    addPdfFooter(doc);
-    doc.save(`Michango-Mingine-${muhula.replace(/\s+/g,'-')}-${darasaFilter.replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.pdf`);
-}
-
-// ===== HOS: EXCEL - MICHANGO MINGINE =====
-function exportHosMichangoExcel() {
-    if (typeof XLSX === 'undefined') {
-        alert("❌ Excel export haijapakia vizuri, jaribu kurefresh ukurasa.");
-        return;
-    }
-    const muhulaSelect = document.getElementById('hosHostelMuhulaSelect');
-    const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
-    const darasaSelect = document.getElementById('hosMichangoDarasaSelect');
-    const darasaFilter = darasaSelect ? darasaSelect.value : 'Yote';
-    let wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
-    if (darasaFilter !== 'Yote') wanafunziMuhula = wanafunziMuhula.filter(d => d.darasa === darasaFilter);
-
-    if (wanafunziMuhula.length === 0) {
-        alert("Hakuna taarifa za Michango Mingine kwa vigezo hivi - hakuna cha ku-export.");
-        return;
-    }
-
-    const rows = wanafunziMuhula.map(d => ({
-        "Jina la Mwanafunzi": d.jina_mwanafunzi,
-        "Darasa": d.darasa,
-        "Muhula": d.muhula,
-        "Ada Hostel Alicholipa": d.ada_hostel || 0,
-        "Mahindi": d.mahindi || 0,
-        "Maharage": d.maharage || 0,
-        "Mchele": d.mchele || 0,
-        "Rimu": d.njia_malipo || '-',
-        "Tarehe": d.tarehe,
-        "Status": d.status_mhasibu === 'approved' ? 'Approved' : 'Pending'
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Michango Mingine");
-    XLSX.writeFile(workbook, `Michango-Mingine-${muhula.replace(/\s+/g,'-')}-${darasaFilter.replace(/\s+/g,'-')}-${new Date().toISOString().split('T')[0]}.xlsx`);
-}
-
 // ===== HOS: PDF ya Taarifa Kamili ya Hostel (Alicholipa + Deni) =====
 function printHostelStatement() {
-    const muhulaSelect = document.getElementById('hosHostelMuhulaSelect');
+    const muhulaSelect = document.getElementById('hosMuhulaSelect');
     const muhula = muhulaSelect ? muhulaSelect.value : 'Muhula wa Kwanza';
 
     const wanafunziMuhula = hostelMalipo.filter(d => d.muhula === muhula);
