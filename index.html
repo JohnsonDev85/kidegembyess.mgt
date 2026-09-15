@@ -301,6 +301,31 @@
         </div>
 
         <div id="hosMiradiSection">
+
+            <!-- Muhtasari wa Salio la Kila Mradi (kama kwa Mhasibu) -->
+            <div class="grid-summary" style="margin-bottom: 25px;">
+                <div class="card maziwa" style="border-left: 5px solid #1abc9c;">
+                    <h3 style="color: #1abc9c;">Salio la Maziwa</h3>
+                    <div class="amount" id="hosBalanceMaziwa" style="color: #2c3e50;">0 TZS</div>
+                </div>
+                <div class="card saloon" style="border-left: 5px solid #3498db;">
+                    <h3 style="color: #3498db;">Salio la Saloon</h3>
+                    <div class="amount" id="hosBalanceSaloon" style="color: #2c3e50;">0 TZS</div>
+                </div>
+                <div class="card mgahawa" style="border-left: 5px solid #9b59b6;">
+                    <h3 style="color: #9b59b6;">Salio la Mgahawa</h3>
+                    <div class="amount" id="hosBalanceMgahawa" style="color: #2c3e50;">0 TZS</div>
+                </div>
+                <div class="card duka" style="border-left: 5px solid #e67e22;">
+                    <h3 style="color: #e67e22;">Salio la Duka</h3>
+                    <div class="amount" id="hosBalanceDuka" style="color: #2c3e50;">0 TZS</div>
+                </div>
+                <div class="card" style="border-left: 5px solid #27ae60; background: #f4fbf7; grid-column: 1 / -1;">
+                    <h3 style="color: #27ae60; font-size: 1.1rem;">JUMLA KUU YA FEDHA</h3>
+                    <div class="amount" id="hosBalanceTotal" style="color: #27ae60; font-size: 2rem; font-weight: bold;">0 TZS</div>
+                </div>
+            </div>
+
             <div class="grid-summary">
                 <div class="card maziwa" style="border-left: 5px solid #2980b9;">
                     <h3>Total Makusanyo (Section Zote)</h3>
@@ -313,7 +338,13 @@
             </div>
 
             <div class="table-section">
-                <h3 style="color: var(--primary-color);">Mchanganuo wa Miradi kwa Siku</h3>
+                <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                    <h3 style="color: var(--primary-color); margin:0;">Mchanganuo wa Miradi kwa Tarehe</h3>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-weight:bold; font-size:0.85rem;">Chagua Tarehe</label>
+                        <input type="date" id="hosDailyDate" onchange="calculateHosDailyDashboard()">
+                    </div>
+                </div>
                 <div class="data-table-container">
                     <table>
                         <thead>
@@ -366,7 +397,13 @@
                 </div>
             </div>
 
-            <h2 class="section-title">Summary ya Faida (Per Month)</h2>
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-top:20px;">
+                <h2 class="section-title" style="margin:0;">Summary ya Faida (Per Month)</h2>
+                <div class="form-group" style="margin:0;">
+                    <label style="font-weight:bold; font-size:0.85rem;">Chagua Mwezi</label>
+                    <input type="month" id="hosProfitMonth" onchange="calculateHosMonthlyProfit()">
+                </div>
+            </div>
 
             <div class="grid-summary">
                 <div class="card maziwa"><h3>Mauzo Ya Maziwa</h3><div class="amount" id="profit-maziwa">0 TZS</div></div>
@@ -376,50 +413,59 @@
             </div>
 
             <div class="table-section">
-                <h3 style="color: var(--primary-color);">Ripoti ya Matumizi Yaliyoidhinishwa</h3>
-                <div class="data-table-container">
-                    <table>
-                        <thead>
-                            <tr><th>Tarehe</th><th>Idara</th><th>Matumizi Yaliyokubaliwa</th><th>Gharama (TZS)</th><th>Action</th></tr>
-                        </thead>
-                        <tbody id="table-admin-expenses"></tbody>
-                    </table>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <h3 style="color: var(--primary-color); margin:0;">Ripoti ya Matumizi Yaliyoidhinishwa</h3>
+                    <button type="button" onclick="toggleHosPanel('hosApprovedExpensesPanel', this)" class="btn-submit" style="width:auto; padding:6px 16px; background-color:#7f8c8d; margin-top:0;">View</button>
+                </div>
+                <div id="hosApprovedExpensesPanel" style="display:none;">
+                    <div class="data-table-container">
+                        <table>
+                            <thead>
+                                <tr><th>Tarehe</th><th>Idara</th><th>Matumizi Yaliyokubaliwa</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                            </thead>
+                            <tbody id="table-admin-expenses"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <div class="table-section">
-                <h2 class="section-title">Ripoti ya Rekodi za Section Zote</h2>
-
-                <h3>1. Maziwa</h3>
-                <div class="data-table-container">
-                    <table>
-                        <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Yaliyokamuliwa (Ltr)</th><th>Yaliyouzwa (Ltr)</th><th>Yaliyobaki (Ltr)</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
-                        <tbody id="table-maziwa"></tbody>
-                    </table>
+                <div style="display:flex; align-items:center; justify-content:space-between;">
+                    <h2 class="section-title" style="margin:0;">Ripoti ya Rekodi za Section Zote</h2>
+                    <button type="button" onclick="toggleHosPanel('hosSectionRecordsPanel', this)" class="btn-submit" style="width:auto; padding:6px 16px; background-color:#7f8c8d; margin-top:0;">View</button>
                 </div>
+                <div id="hosSectionRecordsPanel" style="display:none;">
+                    <h3>1. Maziwa</h3>
+                    <div class="data-table-container">
+                        <table>
+                            <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Yaliyokamuliwa (Ltr)</th><th>Yaliyouzwa (Ltr)</th><th>Yaliyobaki (Ltr)</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
+                            <tbody id="table-maziwa"></tbody>
+                        </table>
+                    </div>
 
-                <h3>2. Saloon</h3>
-                <div class="data-table-container">
-                    <table>
-                        <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Watu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
-                        <tbody id="table-saloon"></tbody>
-                    </table>
-                </div>
+                    <h3>2. Saloon</h3>
+                    <div class="data-table-container">
+                        <table>
+                            <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Watu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi</th><th>Gharama</th><th>Faida</th><th>Delete</th></tr></thead>
+                            <tbody id="table-saloon"></tbody>
+                        </table>
+                    </div>
 
-                <h3>3. Mgahawa</h3>
-                <div class="data-table-container">
-                    <table>
-                        <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Vitu Vilivyonunuliwa</th><th>Gharama ya Vitu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
-                        <tbody id="table-mgahawa"></tbody>
-                    </table>
-                </div>
+                    <h3>3. Mgahawa</h3>
+                    <div class="data-table-container">
+                        <table>
+                            <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Vitu Vilivyonunuliwa</th><th>Gharama ya Vitu</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
+                            <tbody id="table-mgahawa"></tbody>
+                        </table>
+                    </div>
 
-                <h3>4. Duka</h3>
-                <div class="data-table-container">
-                    <table>
-                        <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Bidhaa Zilizonunuliwa</th><th>Gharama ya Bidhaa</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
-                        <tbody id="table-duka"></tbody>
-                    </table>
+                    <h3>4. Duka</h3>
+                    <div class="data-table-container">
+                        <table>
+                            <thead><tr><th>Tarehe</th><th>Msimamizi</th><th>Bidhaa Zilizonunuliwa</th><th>Gharama ya Bidhaa</th><th>Mauzo (TZS)</th><th>Kwa Mhasibu (TZS)</th><th>Matumizi ya Ziada</th><th>Gharama Ziada</th><th>Faida</th><th>Delete</th></tr></thead>
+                            <tbody id="table-duka"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -487,7 +533,7 @@
                         <input type="file" id="uploadExcelFile" accept=".xlsx,.xls,.csv">
                     </div>
                 </div>
-                <button onclick="uploadWanafunziExcel()" class="btn-submit" style="background-color:#8e44ad;">Upload Wanafunzi</button>
+                <button type="button" onclick="uploadWanafunziExcel()" class="btn-submit" style="background-color:#8e44ad;">Upload Wanafunzi</button>
                 <p id="uploadStatusMsg" style="margin-top:10px; font-size:0.9rem; font-weight:bold; color:#333;"></p>
 
                 <hr style="margin:20px 0; border:none; border-top:1px solid #eee;">
@@ -528,18 +574,29 @@
                 <div class="settings-section" style="margin-bottom:20px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                     <div class="form-group" style="margin:0;">
                         <label style="font-weight:bold;">Chagua Muhula</label>
-                        <select id="hosHostelMuhulaSelect" onchange="renderHosHostelSummary()">
+                        <select id="hosHostelMuhulaSelect" onchange="renderHosHostelSummary(); renderHosTaalumaSubTab();">
                             <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
                             <option value="Muhula wa Pili">Muhula wa Pili</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-weight:bold;">Chagua Darasa (Download)</label>
+                        <select id="hosTaalumaDarasaSelect">
+                            <option value="Yote">Darasa: Yote</option>
+                            <option value="Form 1">Form 1</option>
+                            <option value="Form 2">Form 2</option>
+                            <option value="Form 3">Form 3</option>
+                            <option value="Form 4">Form 4</option>
                         </select>
                     </div>
                     <div>
                         <h3 style="color:#2c3e50; margin:0;">Idadi ya Wanafunzi Waliolipia Ada ya Hostel: <span id="hosHostelStudentCount" style="color:#8e44ad;">0</span></h3>
                     </div>
-                    <button onclick="printTaalumaReport()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF - Taaluma</button>
+                    <button onclick="printTaalumaReport()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF</button>
+                    <button onclick="exportHosTaalumaExcel()" class="btn-submit" style="background-color:#1d7044; width:auto; padding:10px 20px;"> Download Excel</button>
                 </div>
                 <div class="table-section">
-                    <h3 style="color:#8e44ad;">Taaluma kwa Darasa</h3>
+                    <h3 style="color:#8e44ad;">Taaluma kwa Darasa (Idadi Pekee)</h3>
                     <div id="hosTaalumaListContainer"></div>
                 </div>
             </div>
@@ -547,10 +604,21 @@
             <!-- ===== SUBTAB: MICHANGO MINGINE ===== -->
             <div id="hosHostelMichangoSubTab" style="display:none;">
                 <div class="settings-section" style="margin-bottom:20px; display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
-                    <button onclick="printMichangoMingineReport()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF - Michango Mingine</button>
+                    <div class="form-group" style="margin:0;">
+                        <label style="font-weight:bold;">Chagua Darasa (Download)</label>
+                        <select id="hosMichangoDarasaSelect">
+                            <option value="Yote">Darasa: Yote</option>
+                            <option value="Form 1">Form 1</option>
+                            <option value="Form 2">Form 2</option>
+                            <option value="Form 3">Form 3</option>
+                            <option value="Form 4">Form 4</option>
+                        </select>
+                    </div>
+                    <button onclick="printMichangoMingineReport()" class="btn-submit" style="background-color:#8e44ad; width:auto; padding:10px 20px;"> Download PDF</button>
+                    <button onclick="exportHosMichangoExcel()" class="btn-submit" style="background-color:#1d7044; width:auto; padding:10px 20px;"> Download Excel</button>
                 </div>
                 <div class="table-section">
-                    <h3 style="color:#8e44ad;">Michango Mingine kwa Darasa (Ada Hostel, Mahindi, Maharage, Mchele)</h3>
+                    <h3 style="color:#8e44ad;">Michango Mingine kwa Darasa (Idadi Pekee)</h3>
                     <div id="hosMichangoListContainer"></div>
                 </div>
             </div>
