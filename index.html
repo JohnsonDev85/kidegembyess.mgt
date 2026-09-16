@@ -226,13 +226,21 @@
 
         <div id="accHostelSection" style="display:none;">
             <div class="grid-summary" style="margin-bottom:25px;">
-                <div class="card" style="border-left: 5px solid #0f766e; grid-column: 1 / -1;">
-                    <h3 style="color:#0f766e;">SALIO LA JUMLA LA HOSTEL (Ada Hostel + Ada Taaluma)</h3>
-                    <div class="amount" id="accHostelBalance" style="color:#0f766e; font-size:2rem; font-weight:bold;">0 TZS</div>
+                <div class="card" style="border-left: 5px solid #8e44ad;">
+                    <h3 style="color:#8e44ad;">Salio la Taaluma</h3>
+                    <div class="amount" id="accHostelBalanceTaaluma" style="color:#2c3e50;">0 TZS</div>
                 </div>
-                <div class="card" style="border-left: 5px solid #0369a1; grid-column: 1 / -1;">
-                    <h3 style="color:#0369a1;">SALIO LA MASHINE (Pumba) - Tofauti na Hostel</h3>
-                    <div class="amount" id="accMashineBalance" style="color:#0369a1; font-size:2rem; font-weight:bold;">0 TZS</div>
+                <div class="card" style="border-left: 5px solid #0f766e;">
+                    <h3 style="color:#0f766e;">Salio la Hostel</h3>
+                    <div class="amount" id="accHostelBalanceHostel" style="color:#2c3e50;">0 TZS</div>
+                </div>
+                <div class="card" style="border-left: 5px solid #d97706;">
+                    <h3 style="color:#d97706;">Salio la Rimu</h3>
+                    <div class="amount" id="accHostelBalanceRimu" style="color:#2c3e50;">0 TZS</div>
+                </div>
+                <div class="card" style="border-left: 5px solid #0369a1;">
+                    <h3 style="color:#0369a1;">Salio la Mashine (Pumba)</h3>
+                    <div class="amount" id="accMashineBalance" style="color:#2c3e50;">0 TZS</div>
                 </div>
             </div>
 
@@ -244,6 +252,18 @@
                             <tr><th>Tarehe</th><th>Kiasi cha Pumba</th><th>Bei</th><th>Jumla Mauzo (TZS)</th><th>Msimamizi</th><th>Action</th></tr>
                         </thead>
                         <tbody id="accMashinePendingTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-section" style="margin-bottom: 25px;">
+                <h3 style="color: #0369a1;">Matumizi ya Pumba Yanayosubiri Kutolewa Fedha</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="accMashinePendingExpensesTable"></tbody>
                     </table>
                 </div>
             </div>
@@ -527,6 +547,26 @@
                 </form>
             </div>
 
+            <!-- ===== SALIO LA HOSTEL (Taaluma / Hostel / Rimu / Mashine) - kama kwenye Miradi ===== -->
+            <div class="grid-summary" style="margin-bottom:25px;">
+                <div class="card" style="border-left: 5px solid #8e44ad;">
+                    <h3 style="color:#8e44ad;">Salio la Taaluma</h3>
+                    <div class="amount" id="hosHostelBalanceTaaluma" style="color:#2c3e50;">0 TZS</div>
+                </div>
+                <div class="card" style="border-left: 5px solid #0f766e;">
+                    <h3 style="color:#0f766e;">Salio la Hostel</h3>
+                    <div class="amount" id="hosHostelBalanceHostel" style="color:#2c3e50;">0 TZS</div>
+                </div>
+                <div class="card" style="border-left: 5px solid #d97706;">
+                    <h3 style="color:#d97706;">Salio la Rimu</h3>
+                    <div class="amount" id="hosHostelBalanceRimu" style="color:#2c3e50;">0 TZS</div>
+                </div>
+                <div class="card" style="border-left: 5px solid #0369a1;">
+                    <h3 style="color:#0369a1;">Salio la Mashine (Pumba)</h3>
+                    <div class="amount" id="hosMashineBalance" style="color:#2c3e50;">0 TZS</div>
+                </div>
+            </div>
+
             <!-- ===== PAKIA ORODHA YA WANAFUNZI (EXCEL) ===== -->
             <div class="settings-section" style="margin-bottom:25px;">
                 <h3 style="color:#8e44ad;">Upload list ya Wanafunzi (Excel)</h3>
@@ -579,6 +619,30 @@
                 </div>
             </div>
 
+            <div class="table-section" style="margin-top:20px;">
+                <h3 style="color:#0369a1; margin-bottom:10px;">Maombi ya Matumizi ya Pumba Yanayosubiri Uidhinishaji</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Msimamizi</th><th>Maelezo ya Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="table-mashine-pending-requests"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="table-section">
+                <h3 style="color:#0369a1;">Ripoti ya Matumizi ya Pumba Yaliyoidhinishwa</h3>
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr><th>Tarehe</th><th>Msimamizi</th><th>Matumizi</th><th>Gharama (TZS)</th></tr>
+                        </thead>
+                        <tbody id="table-mashine-approved-requests"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- ===== RIPOTI ZA MALIPO (TAALUMA / MICHANGO MINGINE) - DOWNLOAD PEKEE ===== -->
             <div class="settings-section" style="margin-top:25px;">
                 <h3 style="color:#8e44ad;">Ripoti za Malipo ya Hostel (Taaluma na Michango Mingine)</h3>
@@ -619,7 +683,7 @@
                 <div class="data-table-container">
                     <table>
                         <thead>
-                            <tr><th>Tarehe</th><th>Kundi</th><th>Msimamizi</th><th>Maelezo ya Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
+                            <tr><th>Tarehe</th><th>Msimamizi</th><th>Maelezo ya Matumizi</th><th>Gharama (TZS)</th><th>Action</th></tr>
                         </thead>
                         <tbody id="table-hostel-pending-requests"></tbody>
                     </table>
@@ -631,7 +695,7 @@
                 <div class="data-table-container">
                     <table>
                         <thead>
-                            <tr><th>Tarehe</th><th>Kundi</th><th>Msimamizi</th><th>Matumizi</th><th>Gharama (TZS)</th></tr>
+                            <tr><th>Tarehe</th><th>Msimamizi</th><th>Matumizi</th><th>Gharama (TZS)</th></tr>
                         </thead>
                         <tbody id="table-hostel-approved-requests"></tbody>
                     </table>
@@ -923,6 +987,11 @@
             <div id="hostelStudentsListContainer" style="display:none; margin-top:12px;"></div>
         </div>
 
+        <div id="hostelMashineSubTabButtons" style="margin:15px 0; display:flex; gap:10px;">
+            <button type="button" id="mashineSubTabSalesBtn" onclick="switchMashineSubTab('sales')" class="btn-submit" style="width:auto; padding:8px 16px; margin-top:0; background-color:#0369a1;">🛒 Record Sales</button>
+            <button type="button" id="mashineSubTabExpenseBtn" onclick="switchMashineSubTab('matumizi')" class="btn-submit" style="width:auto; padding:8px 16px; margin-top:0; background-color:#7f8c8d;">💸 Request Expenses</button>
+        </div>
+
         <form id="form-hostel-mashine" class="project-form" onsubmit="saveHostelMashine(event)">
             <h3 style="color:#0369a1;">Mashine: Mauzo ya Pumba (Leo)</h3>
             <div class="form-grid">
@@ -934,9 +1003,35 @@
             <button type="submit" class="btn-submit" style="background-color:#0369a1;">Save Mauzo ya Mashine</button>
         </form>
 
+        <form id="form-hostel-mashine-matumizi" class="project-form" onsubmit="submitMashineExpense(event)">
+            <h3 style="color:#0369a1;">Pumba: Request Expenses to Head of School</h3>
+            <div class="form-grid">
+                <div class="form-group"><label>Tarehe</label><input type="date" id="mashine-exp-t" required></div>
+            </div>
+
+            <h4 style="margin-top:15px; color:#555;">Vitu Vinavyohitajika</h4>
+            <div class="form-grid">
+                <div class="form-group"><label>Jina la Kitu</label><input type="text" id="mashine-exp-item-jina" placeholder="Mfano: Matengenezo ya Mashine"></div>
+                <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="number" id="mashine-exp-item-bei" min="0"></div>
+                <div class="form-group" style="justify-content:flex-end;">
+                    <button type="button" onclick="addMashineExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">+ Ongeza Kitu</button>
+                </div>
+            </div>
+
+            <div id="mashineExpenseItemsListContainer" style="margin:15px 0;"></div>
+            <div style="text-align:right; font-weight:bold; font-size:1.1rem; color:#0369a1;">Jumla: TZS <span id="mashineExpenseItemsTotal">0</span></div>
+
+            <button type="submit" class="btn-submit" style="background-color:#0369a1; margin-top:15px;">Send Request</button>
+        </form>
+
         <div class="table-section" id="hostelMashineListSection" style="margin-top:20px;">
             <h3 style="color:#0369a1;">Rekodi za Mashine (Pumba)</h3>
             <div id="hostelMashineListContainer"></div>
+        </div>
+
+        <div class="table-section" id="hostelMashineExpenseHistorySection" style="margin-top:20px; display:none;">
+            <h3 style="color:#0369a1;">Historia ya Maombi ya Pumba</h3>
+            <div id="mashineMyExpenseRequestsHistoryContainer"></div>
         </div>
 
         <form id="form-hostel-matumizi" class="project-form" onsubmit="submitHostelExpense(event)">
@@ -948,13 +1043,6 @@
                     <select id="hostel-exp-muhula">
                         <option value="Muhula wa Kwanza">Muhula wa Kwanza</option>
                         <option value="Muhula wa Pili">Muhula wa Pili</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Kundi</label>
-                    <select id="hostel-exp-kundi">
-                        <option value="Hostel">Hostel (Chakula/Umeme n.k)</option>
-                        <option value="Pumba">Pumba (Mashine)</option>
                     </select>
                 </div>
             </div>
