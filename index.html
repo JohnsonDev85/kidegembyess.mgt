@@ -348,7 +348,7 @@
 
             <div class="table-section">
                 <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-                    <h3 style="color: var(--primary-color); margin:0;">Mchanganuo wa Miradi kwa Tarehe</h3>
+                    <h3 style="color: var(--primary-color); margin:0;">Mchanganuo wa Miradi kwa siku</h3>
                     <div class="form-group" style="margin:0;">
                         <label style="font-weight:bold; font-size:0.85rem;">Chagua Tarehe</label>
                         <input type="date" id="hosDailyDate" onchange="calculateHosDailyDashboard()">
@@ -571,7 +571,7 @@
             <div class="settings-section" style="margin-bottom:25px;">
                 <h3 style="color:#8e44ad;">Upload list ya Wanafunzi (Excel)</h3>
                 <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">
-                    Chagua Darasa kisha upload file la Excel. Kila mwanafunzi awe kwenye mstari mmoja, na jina lake liwe limegawanywa kwenye safu (column) tatu za kwanza (mfano: Jina la Kwanza | Jina la Kati | Jina la Ukoo). Mfumo utaunganisha majina hayo matatu kuwa jina moja kamili.
+                    Chagua Darasa kisha upload file la Excel.
                     Hii itasaidia Msimamizi wa Hostel achague jina kwenye dropdown badala ya kuandika kwa mkono.
                 </p>
                 <div class="form-grid">
@@ -646,7 +646,7 @@
             <!-- ===== RIPOTI ZA MALIPO (TAALUMA / MICHANGO MINGINE) - DOWNLOAD PEKEE ===== -->
             <div class="settings-section" style="margin-top:25px;">
                 <h3 style="color:#8e44ad;">Ripoti za Malipo ya Hostel (Taaluma na Michango Mingine)</h3>
-                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">Chagua vigezo kisha download ripoti - Taaluma pekee, Michango Mingine pekee, au General (zote mbili). Sawa na jinsi Msimamizi wa Hostel anavyodownload.</p>
+                <p style="color:#555; font-size:0.9rem; margin-bottom:10px;">Chagua kisha download ripoti - Taaluma pekee, Michango Mingine pekee, au General (Jumla).</p>
                 <div style="display:flex; align-items:center; gap:15px; flex-wrap:wrap;">
                     <div class="form-group" style="margin:0;">
                         <label style="font-weight:bold;">Chagua Muhula</label>
@@ -852,7 +852,7 @@
                 <div class="form-group"><label>Jina la Kitu</label><input type="text" id="exp-item-jina" placeholder="Mfano: Sukari"></div>
                 <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="number" id="exp-item-bei" min="0"></div>
                 <div class="form-group" style="justify-content:flex-end;">
-                    <button type="button" onclick="addExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">+ Ongeza Kitu</button>
+                    <button type="button" onclick="addExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">Add request</button>
                 </div>
             </div>
 
@@ -863,14 +863,14 @@
         </form>
 
         <div class="table-section" style="margin-top:20px;">
-            <h3 style="color: var(--warning-color);">Historia ya Maombi Yangu ya Matumizi</h3>
+            <h3 style="color: var(--warning-color);">Historia ya Maombi ya Matumizi</h3>
             <div id="myExpenseRequestsHistoryContainer"></div>
         </div>
     </div>
 
     <!-- ================= HOSTEL MANAGER VIEW ================= -->
     <div id="hostelManagerView" class="manager-section" style="display:none;">
-        <h2 class="section-title" style="color:#059669;">KiDe HOSTEL</h2>
+        <h2 class="section-title" style="color:#059669;">KIDE HOSTEL</h2>
         <div class="alert" id="hostelSuccessAlert" style="display:none; background:#2ecc71; color:white; padding:12px; border-radius:6px; margin-bottom:15px; text-align:center;">Sent Successifully!</div>
 
         <div class="settings-section" style="margin-bottom:20px;">
@@ -922,10 +922,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Aina ya Malipo</label>
+                    <label>Rimu</label>
                     <select id="hostel-rimu-aina" onchange="toggleRimuEntityInput()">
                         <option value="Cash">Cash</option>
-                        <option value="Entity">Rimu</option>
+                        <option value="Entity">Rimu kama rimu</option>
                     </select>
                 </div>
                 <div class="form-group" id="hostel-rimu-kiasi-wrapper" style="display:none;">
@@ -933,7 +933,7 @@
                     <input type="number" id="hostel-rimu-kiasi" min="0" placeholder="mfano: 5000">
                 </div>
                 <div class="form-group" id="hostel-rimu-namba-wrapper" style="display:none;">
-                    <label>Namba ya Rimu</label>
+                    <label>Kiasi cha Rimu</label>
                     <input type="text" id="hostel-rimu-namba" placeholder="mfano: 1, 2...">
                 </div>
                 <div class="form-group"><label>Ada ya Hostel (TZS)</label><input type="number" id="hostel-ada-hostel" required min="0"></div>
@@ -1014,7 +1014,7 @@
                 <div class="form-group"><label>Jina la Kitu</label><input type="text" id="mashine-exp-item-jina" placeholder="Mfano: Matengenezo ya Mashine"></div>
                 <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="number" id="mashine-exp-item-bei" min="0"></div>
                 <div class="form-group" style="justify-content:flex-end;">
-                    <button type="button" onclick="addMashineExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">+ Ongeza Kitu</button>
+                    <button type="button" onclick="addMashineExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">Add request</button>
                 </div>
             </div>
 
