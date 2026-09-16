@@ -44,15 +44,15 @@ try {
       if (err.code === 'failed-precondition') {
         // Kuna tab nyingine ya app hii tayari iko wazi - persistence
         // inaweza kuwashwa tab moja kwa wakati mmoja tu (si tatizo kubwa).
-        console.warn("Persistence: tabs nyingi ziko wazi.");
+        console.warn("error.");
       } else if (err.code === 'unimplemented') {
         // Browser hii haitumii offline persistence - app itaendelea kufanya
         // kazi kama kawaida, bila hiyo faida ya cache ya papo kwa hapo.
-        console.warn("Persistence: browser hii haiunga mkono.");
+        console.warn("error.");
       }
     });
 } catch (e) {
-  console.warn("Persistence haikuwezekana kuwashwa (labda tayari imeanzishwa):", e.message);
+  console.warn("error):", e.message);
 }
 
 // ===== KUUNGANISHA KIMYA NA FIREBASE (KWA USALAMA) =====
@@ -1052,7 +1052,7 @@ function disburseExpense(id) {
     if (!req) return;
 
     if (cachedBalances[req.idara] < req.gharama) {
-        const endelee = confirm(`⚠️ Salio la mradi wa ${req.idara.toUpperCase()} halitoshi (linasoma ${cachedBalances[req.idara].toLocaleString()} TZS) kutoa TZS ${req.gharama.toLocaleString()}. Ukiendelea, salio litakuwa hasi (negative). Unataka kuendelea?`);
+        const endelee = confirm(`⚠️ Salio la mradi wa ${req.idara.toUpperCase()} halitoshi (linasoma ${cachedBalances[req.idara].toLocaleString()} TZS) kutoa TZS ${req.gharama.toLocaleString()}. Ukiendelea, salio litakuwa negative. Unataka kuendelea?`);
         if (!endelee) return;
     }
 
@@ -1072,7 +1072,7 @@ function addPdfFooter(doc) {
         doc.setFontSize(8);
         doc.setTextColor(120);
         doc.text("© 2026 JohnsonDev85. All rights reserved!", doc.internal.pageSize.width / 2, pageHeight - 14, { align: "center" });
-        doc.text("This System is Built with love by JohnsonDev85", doc.internal.pageSize.width / 2, pageHeight - 9, { align: "center" });
+        doc.text("This System is Built by Johnson Yona", doc.internal.pageSize.width / 2, pageHeight - 9, { align: "center" });
         doc.text("Email: jyona0607@gmail.com", doc.internal.pageSize.width / 2, pageHeight - 4, { align: "center" });
     }
 }
@@ -1539,7 +1539,7 @@ function renderWanafunziOrodhaManage() {
         countsHtml += `<div style="background:#f3e8ff; border-radius:8px; padding:10px 16px; text-align:center; min-width:110px;">
             <div style="font-weight:bold; color:#8e44ad;">${darasa}</div>
             <div style="font-size:1.3rem; font-weight:bold; color:#2c3e50;">${list.length}</div>
-            <div style="font-size:0.7rem; color:#777;">wamepakiwa</div>
+            <div style="font-size:0.7rem; color:#777;">Uploaded</div>
         </div>`;
     });
     countsContainer.innerHTML = countsHtml;
@@ -1585,7 +1585,7 @@ function toggleWanafunziOrodhaView() {
     } else {
         renderWanafunziOrodhaFullList();
         container.style.display = 'block';
-        if (btn) btn.innerText = '🙈 Ficha Orodha';
+        if (btn) btn.innerText = '🙈 Hide list';
     }
 }
 
@@ -1598,7 +1598,7 @@ function uploadWanafunziExcel() {
 
     if (!darasaEl || !fileInput || !statusEl) {
         console.error("uploadWanafunziExcel: elements za HTML hazikupatikana", { darasaEl, fileInput, statusEl });
-        alert("❌ Kuna hitilafu ya ukurasa (elements hazikupatikana). Tafadhali refresh ukurasa kisha jaribu tena.");
+        alert("❌ Kuna hitilafu ya ukurasa. Tafadhali refresh ukurasa kisha jaribu tena.");
         return;
     }
 
@@ -1613,13 +1613,13 @@ function uploadWanafunziExcel() {
     }
 
     statusEl.style.color = '#333';
-    statusEl.innerText = "Inasoma faili...";
+    statusEl.innerText = "Uploading...";
 
     const reader = new FileReader();
     reader.onerror = function() {
         console.error("FileReader error:", reader.error);
         statusEl.style.color = '#c0392b';
-        statusEl.innerText = "❌ Imeshindwa kusoma faili. Jaribu tena au tumia faili jingine la Excel.";
+        statusEl.innerText = "❌ Imeshindwa kusoma file. Jaribu tena au tumia file jingine la Excel.";
     };
     reader.onload = function(e) {
         try {
@@ -1677,7 +1677,7 @@ function uploadWanafunziExcel() {
             }).catch(err => {
                 console.error("uploadWanafunziExcel - batch.commit error:", err);
                 statusEl.style.color = '#c0392b';
-                statusEl.innerText = "❌ Imeshindwa kuhifadhi (" + err.code + "): " + err.message;
+                statusEl.innerText = "❌ Failed saving (" + err.code + "): " + err.message;
             });
 
         } catch (err) {
@@ -1754,7 +1754,7 @@ function onHostelStudentSelected() {
     historyContainer.style.display = 'block';
 
     if (pastRecords.length === 0) {
-        historyContainer.innerHTML = `<p style="color:#999; font-size:0.85rem; margin:0;">Hakuna historia ya malipo ya awali kwa ${jina}. Huyu ni mwanafunzi mpya kwenye rekodi za Hostel.</p>`;
+        historyContainer.innerHTML = `<p style="color:#999; font-size:0.85rem; margin:0;">Hakuna record ya malipo ya awali kwa ${jina}. Huyu ni mwanafunzi mpya kwenye rekodi za Hostel.</p>`;
         return;
     }
 
@@ -1854,7 +1854,7 @@ function saveHostelStudent(e) {
         const idToUpdate = editingHostelMalipoId;
         firestore.collection('hostel_malipo').doc(idToUpdate).update(record)
           .then(() => {
-              alert("✅ Malipo yamesasishwa (updated) kikamilifu! Yanasubiri approval mpya ya Mhasibu.");
+              alert("✅ Malipo  updated kikamilifu! Yanasubiri approval mpya ya Mhasibu.");
               cancelEditHostelStudent();
               hostelSaveAndRefresh('form-hostel-student');
           })
@@ -1917,7 +1917,7 @@ function editHostelStudent(id) {
     const titleEl = document.getElementById('hostelStudentFormTitle');
     const submitBtn = document.getElementById('hostelStudentSubmitBtn');
     const cancelBtn = document.getElementById('hostelStudentCancelEditBtn');
-    if (titleEl) titleEl.innerText = `✏️ Hariri Malipo ya ${record.jina_mwanafunzi}`;
+    if (titleEl) titleEl.innerText = `✏️ Edit Malipo ya ${record.jina_mwanafunzi}`;
     if (submitBtn) submitBtn.innerText = 'Update Malipo';
     if (cancelBtn) cancelBtn.style.display = 'inline-block';
 
@@ -1968,7 +1968,7 @@ function renderHostelExpenseItemsList() {
     if (!container || !totalEl) return;
 
     if (currentHostelExpenseItems.length === 0) {
-        container.innerHTML = `<p style="color:#999; font-size:0.9rem;">Hakuna kitu kilichoongezwa bado.</p>`;
+        container.innerHTML = `<p style="color:#999; font-size:0.9rem;">Hakuna kitu kilichoongezwa.</p>`;
         totalEl.innerText = '0';
         return;
     }
@@ -2161,7 +2161,7 @@ function toggleHostelStudentsListView() {
     } else {
         renderHostelStudentsFullList();
         container.style.display = 'block';
-        if (btn) btn.innerText = '🙈 Ficha Orodha';
+        if (btn) btn.innerText = '🙈 Hide list';
     }
 }
 
