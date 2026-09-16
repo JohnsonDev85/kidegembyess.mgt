@@ -191,6 +191,15 @@ let hostelMashine = [];
 let hostelMashineInitialized = false;
 let mashineBalance = 0;
 
+// ===== MASHINE (PUMBA): OMBI LA MATUMIZI - TOFAUTI NA OMBI LA HOSTEL =====
+let hostelMashineMatumizi = [];
+let hostelMashineMatumiziInitialized = false;
+let currentMashineExpenseItems = [];
+
+// ===== HOSTEL: SALIO ZILIZOGAWANYWA (Taaluma / Hostel / Rimu) =====
+let hostelBalanceTaaluma = 0;
+let hostelBalanceRimu = 0;
+
 // ===== HOS: SUB-TAB YA HOSTEL (mashine | taaluma | michango) =====
 
 // ===== ORODHA YA WANAFUNZI (kwa ajili ya dropdown ya Hostel) =====
@@ -299,6 +308,7 @@ function startListeners() {
 
       renderHostelStudentsList();
       if (currentRole === 'accountant') renderHostelAccountantDashboard();
+      if (currentRole === 'hos') renderHostelBalanceCards();
       if (currentRole === 'hostelmanager') onHostelStudentSelected();
     });
   }
@@ -323,6 +333,7 @@ function startListeners() {
       }
       renderHostelRequests();
       if (currentRole === 'accountant') renderHostelAccountantDashboard();
+      if (currentRole === 'hos') renderHostelBalanceCards();
       if (currentRole === 'hostelmanager') renderHostelMyExpenseRequestsHistory();
     });
   }
@@ -424,7 +435,33 @@ function startListeners() {
 
       renderHostelMashineList();
       if (currentRole === 'accountant') renderMashineAccountantSection();
-      if (currentRole === 'hos') renderHosMashineSubTab();
+      if (currentRole === 'hos') { renderHosMashineSubTab(); renderMashineAccountantSection(); }
+    });
+  }
+
+  // ===== MASHINE (PUMBA): OMBI LA MATUMIZI - Tofauti na ombi la Hostel =====
+  // Inahitajika na: HOS, Mhasibu, Msimamizi wa Hostel
+  if (role === 'hos' || role === 'accountant' || role === 'hostelmanager') {
+    firestore.collection('hostel_mashine_matumizi').limit(200).onSnapshot(snapshot => {
+      hostelMashineMatumizi = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      if (hostelMashineMatumiziInitialized) {
+        snapshot.docChanges().forEach(change => {
+          if (change.type === 'added') {
+            const d = change.doc.data();
+            if (currentRole === 'hos') {
+              addNotification(`⚙️ Ombi la matumizi ya Pumba: ${d.jina} - TZS ${(d.gharama || 0).toLocaleString()}`);
+            }
+          }
+        });
+      } else {
+        hostelMashineMatumiziInitialized = true;
+      }
+
+      renderMashineRequests();
+      if (currentRole === 'accountant') renderMashineAccountantSection();
+      if (currentRole === 'hos') renderMashineAccountantSection();
+      if (currentRole === 'hostelmanager') renderMashineMyExpenseRequestsHistory();
     });
   }
 }
@@ -1448,14 +1485,19 @@ function toggleHostelForm() {
     document.getElementById('form-hostel-matumizi').classList.remove('active');
     const mashineForm = document.getElementById('form-hostel-mashine');
     if (mashineForm) mashineForm.classList.remove('active');
+    const mashineExpForm = document.getElementById('form-hostel-mashine-matumizi');
+    if (mashineExpForm) mashineExpForm.classList.remove('active');
 
     if (type === 'matumizi') {
         document.getElementById('form-hostel-matumizi').classList.add('active');
     } else if (type === 'mashine') {
-        if (mashineForm) mashineForm.classList.add('active');
+        switchMashineSubTab('sales');
     } else {
         document.getElementById('form-hostel-student').classList.add('active');
     }
+
+    const subTabBtns = document.getElementById('hostelMashineSubTabButtons');
+    if (subTabBtns) subTabBtns.style.display = type === 'mashine' ? 'flex' : 'none';
 
     // ===== Kila aina ionyeshe details zake mahususi tu (bila mchanganyiko) =====
     const sections = {
@@ -1961,7 +2003,6 @@ function submitHostelExpense(e) {
     const record = {
         tarehe: document.getElementById('hostel-exp-t').value,
         muhula: document.getElementById('hostel-exp-muhula').value,
-        kundi: document.getElementById('hostel-exp-kundi').value,
         msimamizi: hostelInfo.msimamizi || "Not found",
         vitu: [...currentHostelExpenseItems],
         jina: currentHostelExpenseItems.map(it => it.jina).join(', '),
@@ -2003,7 +2044,7 @@ function renderHostelMyExpenseRequestsHistory() {
         const rows = vitu.map(v => `<tr><td>${v.jina}</td><td>${(v.bei || 0).toLocaleString()}</td></tr>`).join('');
         return `<div style="margin-top:12px; background:#fff; border-left:5px solid var(--warning-color); border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); padding:12px;">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-                <strong>${r.kundi || 'Hostel'} - ${r.tarehe}</strong>
+                <strong>${r.tarehe}</strong>
                 ${statusLabel(r)}
             </div>
             <div class="data-table-container" style="margin-top:8px;">
@@ -2175,18 +2216,208 @@ function renderHostelMashineList() {
     </div>`;
 }
 
+// ===== MASHINE (PUMBA): SWITCH KATI YA "RECORD SALES" NA "REQUEST EXPENSES" =====
+function switchMashineSubTab(type) {
+    const salesForm = document.getElementById('form-hostel-mashine');
+    const expForm = document.getElementById('form-hostel-mashine-matumizi');
+    const salesBtn = document.getElementById('mashineSubTabSalesBtn');
+    const expBtn = document.getElementById('mashineSubTabExpenseBtn');
+    const historySection = document.getElementById('hostelMashineExpenseHistorySection');
+    const salesListSection = document.getElementById('hostelMashineListSection');
+
+    if (salesForm) salesForm.classList.remove('active');
+    if (expForm) expForm.classList.remove('active');
+    if (historySection) historySection.style.display = 'none';
+
+    if (type === 'matumizi') {
+        if (expForm) expForm.classList.add('active');
+        if (historySection) historySection.style.display = 'block';
+        if (salesListSection) salesListSection.style.display = 'none';
+        if (salesBtn) salesBtn.style.backgroundColor = '#7f8c8d';
+        if (expBtn) expBtn.style.backgroundColor = '#0369a1';
+        renderMashineExpenseItemsList();
+        renderMashineMyExpenseRequestsHistory();
+    } else {
+        if (salesForm) salesForm.classList.add('active');
+        if (salesListSection) salesListSection.style.display = 'block';
+        if (salesBtn) salesBtn.style.backgroundColor = '#0369a1';
+        if (expBtn) expBtn.style.backgroundColor = '#7f8c8d';
+    }
+}
+
+// Kuongeza kitu kimoja kwenye orodha ya ombi la matumizi ya Pumba
+function addMashineExpenseItem() {
+    const jinaInput = document.getElementById('mashine-exp-item-jina');
+    const beiInput = document.getElementById('mashine-exp-item-bei');
+    const jina = jinaInput.value.trim();
+    const bei = parseFloat(beiInput.value) || 0;
+
+    if (!jina) { alert("Andika jina la kitu kwanza!"); return; }
+    if (bei <= 0) { alert("Weka bei ya kitu!"); return; }
+
+    currentMashineExpenseItems.push({ jina, bei });
+    jinaInput.value = '';
+    beiInput.value = '';
+    jinaInput.focus();
+    renderMashineExpenseItemsList();
+}
+
+function removeMashineExpenseItem(index) {
+    currentMashineExpenseItems.splice(index, 1);
+    renderMashineExpenseItemsList();
+}
+
+function renderMashineExpenseItemsList() {
+    const container = document.getElementById('mashineExpenseItemsListContainer');
+    const totalEl = document.getElementById('mashineExpenseItemsTotal');
+    if (!container || !totalEl) return;
+
+    if (currentMashineExpenseItems.length === 0) {
+        container.innerHTML = `<p style="color:#999; font-size:0.9rem;">Hakuna kitu kilichoongezwa bado.</p>`;
+        totalEl.innerText = '0';
+        return;
+    }
+
+    container.innerHTML = `<div class="data-table-container" style="margin-top:0;">
+        <table>
+            <thead><tr><th>Jina la Kitu</th><th>Bei (TZS)</th><th>Action</th></tr></thead>
+            <tbody>
+                ${currentMashineExpenseItems.map((it, i) => `<tr>
+                    <td>${it.jina}</td>
+                    <td>${it.bei.toLocaleString()}</td>
+                    <td><button type="button" onclick="removeMashineExpenseItem(${i})" style="background:#e74c3c;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:12px;">✕</button></td>
+                </tr>`).join('')}
+            </tbody>
+        </table>
+    </div>`;
+
+    const total = currentMashineExpenseItems.reduce((t, it) => t + it.bei, 0);
+    totalEl.innerText = total.toLocaleString();
+}
+
+function submitMashineExpense(e) {
+    e.preventDefault();
+
+    if (currentMashineExpenseItems.length === 0) {
+        alert("Ongeza angalau kitu kimoja kwenye orodha kabla ya kutuma!");
+        return;
+    }
+
+    const total = currentMashineExpenseItems.reduce((t, it) => t + it.bei, 0);
+
+    const record = {
+        tarehe: document.getElementById('mashine-exp-t').value,
+        msimamizi: hostelInfo.msimamizi || "Not found",
+        vitu: [...currentMashineExpenseItems],
+        jina: currentMashineExpenseItems.map(it => it.jina).join(', '),
+        gharama: total,
+        status: 'pending',
+        status_fedha: 'unpaid'
+    };
+    firestore.collection('hostel_mashine_matumizi').add(record)
+      .then(() => {
+          currentMashineExpenseItems = [];
+          renderMashineExpenseItemsList();
+          document.getElementById('form-hostel-mashine-matumizi').reset();
+      })
+      .catch(e => alert("Kosa: " + e.message));
+}
+
+// Historia ya maombi ya Msimamizi kwa ajili ya Pumba pekee
+function renderMashineMyExpenseRequestsHistory() {
+    const container = document.getElementById('mashineMyExpenseRequestsHistoryContainer');
+    if (!container) return;
+
+    const myRequests = [...hostelMashineMatumizi].sort((a, b) => (b.tarehe || '').localeCompare(a.tarehe || ''));
+
+    if (myRequests.length === 0) {
+        container.innerHTML = `<p style="color:#999; text-align:center; padding:15px;">Hakuna maombi bado.</p>`;
+        return;
+    }
+
+    const statusLabel = (r) => {
+        if (r.status === 'approved') return r.status_fedha === 'paid'
+            ? `<span style="color:green; font-weight:bold;">Imelipwa</span>`
+            : `<span style="color:#e67e22; font-weight:bold;">Imekubaliwa - Inasubiri Fedha</span>`;
+        if (r.status === 'rejected') return `<span style="color:#c0392b; font-weight:bold;">Imekataliwa</span>`;
+        return `<span style="color:#999; font-weight:bold;">Inasubiri HOS</span>`;
+    };
+
+    container.innerHTML = myRequests.slice(0, 50).map(r => {
+        const vitu = Array.isArray(r.vitu) && r.vitu.length > 0 ? r.vitu : [{ jina: r.jina, bei: r.gharama }];
+        const rows = vitu.map(v => `<tr><td>${v.jina}</td><td>${(v.bei || 0).toLocaleString()}</td></tr>`).join('');
+        return `<div style="margin-top:12px; background:#fff; border-left:5px solid #0369a1; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); padding:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <strong>${r.tarehe}</strong>
+                ${statusLabel(r)}
+            </div>
+            <div class="data-table-container" style="margin-top:8px;">
+                <table style="font-size:0.85rem;">
+                    <thead><tr><th>Kitu</th><th>Bei (TZS)</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+            <div style="text-align:right; font-weight:bold; margin-top:5px;">Jumla: ${(r.gharama || 0).toLocaleString()} TZS</div>
+        </div>`;
+    }).join('');
+}
+
+// HOS: kuidhinisha maombi ya matumizi ya Pumba (tofauti na ya Hostel)
+function renderMashineRequests() {
+    const pendingTbody = document.getElementById('table-mashine-pending-requests');
+    const approvedTbody = document.getElementById('table-mashine-approved-requests');
+    if (!pendingTbody || !approvedTbody) return;
+
+    pendingTbody.innerHTML = '';
+    hostelMashineMatumizi.filter(r => r.status === 'pending').forEach(r => {
+        pendingTbody.innerHTML += `
+            <tr>
+                <td>${r.tarehe}</td>
+                <td>${r.msimamizi}</td>
+                <td>${r.jina}</td>
+                <td>${r.gharama.toLocaleString()}</td>
+                <td>
+                    <button class="btn-approve" onclick="approveMashineExpense('${r.id}')">Accept</button>
+                    <button class="btn-reject" onclick="rejectMashineExpense('${r.id}')">Reject</button>
+                    <button onclick="deleteRecord('hostel_mashine_matumizi','${r.id}')" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;">🗑</button>
+                </td>
+            </tr>`;
+    });
+
+    approvedTbody.innerHTML = '';
+    hostelMashineMatumizi.filter(r => r.status === 'approved').forEach(r => {
+        approvedTbody.innerHTML += `<tr><td>${r.tarehe}</td><td>${r.msimamizi}</td><td>${r.jina}</td><td>${r.gharama.toLocaleString()}</td><td><button onclick="deleteRecord('hostel_mashine_matumizi','${r.id}')" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;">🗑 Delete</button></td></tr>`;
+    });
+}
+
+function approveMashineExpense(id) {
+    firestore.collection('hostel_mashine_matumizi').doc(id).update({ status: 'approved' })
+      .catch(e => alert("Kosa: " + e.message));
+}
+
+function rejectMashineExpense(id) {
+    firestore.collection('hostel_mashine_matumizi').doc(id).update({ status: 'rejected' })
+      .catch(e => alert("Kosa: " + e.message));
+}
+
 // ===== MASHINE - MHASIBU (Salio tofauti kabisa na Hostel) =====
 function calculateMashineBalance() {
-    mashineBalance = hostelMashine
+    const income = hostelMashine
         .filter(d => d.status_mhasibu === 'approved')
         .reduce((t, d) => t + (d.jumla_mauzo || 0), 0);
+    const paidExpenses = hostelMashineMatumizi
+        .filter(r => r.status === 'approved' && r.status_fedha === 'paid')
+        .reduce((t, r) => t + (r.gharama || 0), 0);
+    mashineBalance = income - paidExpenses;
     return mashineBalance;
 }
 
 function renderMashineAccountantSection() {
     const balance = calculateMashineBalance();
-    const balanceEl = document.getElementById('accMashineBalance');
-    if (balanceEl) balanceEl.innerText = balance.toLocaleString() + " TZS";
+    ['accMashineBalance', 'hosMashineBalance'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = balance.toLocaleString() + " TZS";
+    });
 
     const pendingTable = document.getElementById('accMashinePendingTable');
     if (pendingTable) {
@@ -2203,6 +2434,34 @@ function renderMashineAccountantSection() {
                 </tr>`;
         });
     }
+
+    const pendingExpTable = document.getElementById('accMashinePendingExpensesTable');
+    if (pendingExpTable) {
+        pendingExpTable.innerHTML = '';
+        hostelMashineMatumizi.filter(r => r.status === 'approved' && r.status_fedha === 'unpaid').forEach(r => {
+            pendingExpTable.innerHTML += `
+                <tr>
+                    <td>${r.tarehe}</td>
+                    <td>${r.jina}</td>
+                    <td>${r.gharama.toLocaleString()}</td>
+                    <td><button onclick="disburseMashineExpense('${r.id}')" style="background:#e67e22; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;"> Cashout</button></td>
+                </tr>`;
+        });
+    }
+}
+
+function disburseMashineExpense(id) {
+    let req = hostelMashineMatumizi.find(r => r.id === id);
+    if (!req) return;
+
+    if (mashineBalance < req.gharama) {
+        alert(`❌ Salio la Mashine (Pumba) halitoshi kutoa TZS ${req.gharama.toLocaleString()}!`);
+        return;
+    }
+
+    firestore.collection('hostel_mashine_matumizi').doc(id).update({ status_fedha: 'paid' })
+      .then(() => alert("Fedha imetolewa kikamilifu kwa ajili ya matumizi ya Pumba!"))
+      .catch(e => alert("Kosa: " + e.message));
 }
 
 function approveMashineCollection(id) {
@@ -2476,7 +2735,6 @@ function renderHostelRequests() {
         pendingTbody.innerHTML += `
             <tr>
                 <td>${r.tarehe}</td>
-                <td style="text-transform:capitalize;">${r.kundi || 'Hostel'}</td>
                 <td>${r.msimamizi}</td>
                 <td>${r.jina}</td>
                 <td>${r.gharama.toLocaleString()}</td>
@@ -2490,7 +2748,7 @@ function renderHostelRequests() {
 
     approvedTbody.innerHTML = '';
     hostelMatumizi.filter(r => r.status === 'approved').forEach(r => {
-        approvedTbody.innerHTML += `<tr><td>${r.tarehe}</td><td style="text-transform:capitalize;">${r.kundi || 'Hostel'}</td><td>${r.msimamizi}</td><td>${r.jina}</td><td>${r.gharama.toLocaleString()}</td><td><button onclick="deleteRecord('hostel_matumizi','${r.id}')" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;">🗑 Delete</button></td></tr>`;
+        approvedTbody.innerHTML += `<tr><td>${r.tarehe}</td><td>${r.msimamizi}</td><td>${r.jina}</td><td>${r.gharama.toLocaleString()}</td><td><button onclick="deleteRecord('hostel_matumizi','${r.id}')" style="background:#e74c3c;color:white;border:none;padding:6px 10px;border-radius:4px;cursor:pointer;font-size:12px;">🗑 Delete</button></td></tr>`;
     });
 }
 
@@ -2725,22 +2983,42 @@ function switchAccTab(tab) {
 
 // ===== MHASIBU: HOSTEL BALANCE + APPROVALS =====
 function calculateHostelBalance() {
-    const confirmedIncome = hostelMalipo
-        .filter(d => d.status_mhasibu === 'approved')
-        .reduce((t, d) => t + (d.ada_hostel || 0) + (d.ada_taaluma || 0), 0);
+    const approvedMalipo = hostelMalipo.filter(d => d.status_mhasibu === 'approved');
 
+    hostelBalanceTaaluma = approvedMalipo.reduce((t, d) => t + (d.ada_taaluma || 0), 0);
+
+    const hostelIncome = approvedMalipo.reduce((t, d) => t + (d.ada_hostel || 0), 0);
     const paidExpenses = hostelMatumizi
         .filter(r => r.status === 'approved' && r.status_fedha === 'paid')
         .reduce((t, r) => t + (r.gharama || 0), 0);
+    hostelBalance = hostelIncome - paidExpenses;
 
-    hostelBalance = confirmedIncome - paidExpenses;
+    hostelBalanceRimu = approvedMalipo
+        .filter(d => d.rimu_aina === 'Cash')
+        .reduce((t, d) => t + (d.rimu_kiasi || 0), 0);
+
     return hostelBalance;
 }
 
+// Inaandika salio matatu (Taaluma/Hostel/Rimu) kwenye cards za Mhasibu NA za Head of School
+function renderHostelBalanceCards() {
+    calculateHostelBalance();
+    const values = {
+        accHostelBalanceTaaluma: hostelBalanceTaaluma,
+        accHostelBalanceHostel: hostelBalance,
+        accHostelBalanceRimu: hostelBalanceRimu,
+        hosHostelBalanceTaaluma: hostelBalanceTaaluma,
+        hosHostelBalanceHostel: hostelBalance,
+        hosHostelBalanceRimu: hostelBalanceRimu
+    };
+    Object.entries(values).forEach(([id, val]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = val.toLocaleString() + " TZS";
+    });
+}
+
 function renderHostelAccountantDashboard() {
-    const balance = calculateHostelBalance();
-    const balanceEl = document.getElementById('accHostelBalance');
-    if (balanceEl) balanceEl.innerText = balance.toLocaleString() + " TZS";
+    renderHostelBalanceCards();
 
     const muhulaSelect = document.getElementById('accHostelMuhulaSelect');
     const countEl = document.getElementById('accHostelStudentCount');
