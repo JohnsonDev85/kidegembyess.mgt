@@ -61,6 +61,36 @@ firebase.auth().signInAnonymously()
     console.error("Auth error:", error);
   });
 
+// ===== FORMAT NAMBA ZA FEDHA KWA COMMA (mfano 5,000) WAKATI MTUMIAJI ANAANDIKA =====
+// Tumia kwenye input za type="text" kwa namba za fedha/kiasi cha fedha (siyo idadi/units).
+function formatMoneyInput(input) {
+    const cursorFromEnd = input.value.length - input.selectionStart;
+    const raw = input.value.replace(/[^0-9.]/g, '');
+    if (raw === '') { input.value = ''; return; }
+
+    const parts = raw.split('.');
+    const intPart = parts[0].replace(/^0+(?=\d)/, '');
+    const formattedInt = intPart === '' ? '0' : Number(intPart).toLocaleString('en-US');
+    input.value = parts.length > 1 ? `${formattedInt}.${parts[1]}` : formattedInt;
+
+    const newPos = Math.max(0, input.value.length - cursorFromEnd);
+    input.setSelectionRange(newPos, newPos);
+}
+
+// Inasoma namba halisi (bila comma) kutoka input iliyoandikwa kwa comma formatting
+function getMoneyValue(idOrInput) {
+    const input = typeof idOrInput === 'string' ? document.getElementById(idOrInput) : idOrInput;
+    if (!input) return 0;
+    return parseFloat(String(input.value).replace(/,/g, '')) || 0;
+}
+
+// Inaweka namba kwenye input ikiwa tayari imeandikwa kwa comma (kwa ajili ya Edit)
+function setMoneyValue(idOrInput, value) {
+    const input = typeof idOrInput === 'string' ? document.getElementById(idOrInput) : idOrInput;
+    if (!input) return;
+    input.value = (value || value === 0) ? Number(value).toLocaleString('en-US') : '';
+}
+
 // Inahakikisha auth (anonymous) imekamilika kabla ya kutuma ombi lolote la
 // Firestore. Bila hii, kubonyeza Login mapema sana (kabla auth haijakamilika)
 // kunaweza kusababisha "Missing or insufficient permissions" kwa sababu
@@ -1827,7 +1857,7 @@ function saveHostelStudent(e) {
 
     const rimuAina = document.getElementById('hostel-rimu-aina').value;
     const rimuNamba = document.getElementById('hostel-rimu-namba').value.trim();
-    const rimuKiasi = parseFloat(document.getElementById('hostel-rimu-kiasi').value) || 0;
+    const rimuKiasi = getMoneyValue('hostel-rimu-kiasi');
     const njiaDisplay = rimuAina === 'Entity'
         ? `Rimu ${rimuNamba || '-'}`
         : `Cash (TZS ${rimuKiasi.toLocaleString()})`;
@@ -1842,8 +1872,8 @@ function saveHostelStudent(e) {
         rimu_namba: rimuAina === 'Entity' ? rimuNamba : '',
         rimu_kiasi: rimuAina === 'Cash' ? rimuKiasi : 0,
         njia_malipo: njiaDisplay,
-        ada_hostel: parseFloat(document.getElementById('hostel-ada-hostel').value) || 0,
-        ada_taaluma: parseFloat(document.getElementById('hostel-ada-taaluma').value) || 0,
+        ada_hostel: getMoneyValue('hostel-ada-hostel'),
+        ada_taaluma: getMoneyValue('hostel-ada-taaluma'),
         mahindi: parseFloat(document.getElementById('hostel-mahindi').value) || 0,
         maharage: parseFloat(document.getElementById('hostel-maharage').value) || 0,
         mchele: parseFloat(document.getElementById('hostel-mchele').value) || 0,
@@ -1899,8 +1929,8 @@ function editHostelStudent(id) {
     }
 
     document.getElementById('hostel-muhula').value = record.muhula;
-    document.getElementById('hostel-ada-hostel').value = record.ada_hostel || 0;
-    document.getElementById('hostel-ada-taaluma').value = record.ada_taaluma || 0;
+    setMoneyValue('hostel-ada-hostel', record.ada_hostel || 0);
+    setMoneyValue('hostel-ada-taaluma', record.ada_taaluma || 0);
     document.getElementById('hostel-mahindi').value = record.mahindi || 0;
     document.getElementById('hostel-maharage').value = record.maharage || 0;
     document.getElementById('hostel-mchele').value = record.mchele || 0;
@@ -1910,7 +1940,7 @@ function editHostelStudent(id) {
     document.getElementById('hostel-rimu-aina').value = rimuAina;
     toggleRimuEntityInput();
     document.getElementById('hostel-rimu-namba').value = record.rimu_namba || '';
-    document.getElementById('hostel-rimu-kiasi').value = record.rimu_kiasi || '';
+    setMoneyValue('hostel-rimu-kiasi', record.rimu_kiasi || '');
 
     document.getElementById('studentHistoryContainer').style.display = 'none';
 
@@ -1945,7 +1975,7 @@ function addHostelExpenseItem() {
     const jinaInput = document.getElementById('hostel-exp-item-jina');
     const beiInput = document.getElementById('hostel-exp-item-bei');
     const jina = jinaInput.value.trim();
-    const bei = parseFloat(beiInput.value) || 0;
+    const bei = getMoneyValue(beiInput);
 
     if (!jina) { alert("Andika jina la kitu kwanza!"); return; }
     if (bei <= 0) { alert("Weka bei ya kitu!"); return; }
@@ -2020,6 +2050,22 @@ function submitHostelExpense(e) {
 }
 
 // Historia ya maombi ya Msimamizi wa Hostel mwenyewe (kama myExpenseRequestsHistoryContainer ya miradi mingine)
+// Historia ni read-only (hakuna edit/delete) - inaonekana tu ikibonyezwa "View History"
+function toggleHostelExpenseHistoryView() {
+    const container = document.getElementById('hostelMyExpenseRequestsHistoryContainer');
+    const btn = document.getElementById('toggleHostelExpenseHistoryBtn');
+    if (!container) return;
+    const inaonekana = container.style.display !== 'none';
+    if (inaonekana) {
+        container.style.display = 'none';
+        if (btn) btn.innerText = '👁️ View History';
+    } else {
+        renderHostelMyExpenseRequestsHistory();
+        container.style.display = 'block';
+        if (btn) btn.innerText = '🙈 Hide History';
+    }
+}
+
 function renderHostelMyExpenseRequestsHistory() {
     const container = document.getElementById('hostelMyExpenseRequestsHistoryContainer');
     if (!container) return;
@@ -2168,14 +2214,14 @@ function toggleHostelStudentsListView() {
 // ===== MASHINE (PUMBA) - MSIMAMIZI WA HOSTEL =====
 function updateMashineJumlaPreview() {
     const kiasi = parseFloat(document.getElementById('mashine-kiasi').value) || 0;
-    const bei = parseFloat(document.getElementById('mashine-bei').value) || 0;
+    const bei = getMoneyValue('mashine-bei');
     document.getElementById('mashine-jumla-preview').value = (kiasi * bei).toLocaleString();
 }
 
 function saveHostelMashine(e) {
     e.preventDefault();
     const kiasi = parseFloat(document.getElementById('mashine-kiasi').value) || 0;
-    const bei = parseFloat(document.getElementById('mashine-bei').value) || 0;
+    const bei = getMoneyValue('mashine-bei');
     const record = {
         tarehe: document.getElementById('mashine-tarehe').value,
         kiasi_pumba: kiasi,
@@ -2250,7 +2296,7 @@ function addMashineExpenseItem() {
     const jinaInput = document.getElementById('mashine-exp-item-jina');
     const beiInput = document.getElementById('mashine-exp-item-bei');
     const jina = jinaInput.value.trim();
-    const bei = parseFloat(beiInput.value) || 0;
+    const bei = getMoneyValue(beiInput);
 
     if (!jina) { alert("Andika jina la kitu kwanza!"); return; }
     if (bei <= 0) { alert("Weka bei ya kitu!"); return; }
@@ -2324,6 +2370,22 @@ function submitMashineExpense(e) {
 }
 
 // Historia ya maombi ya Msimamizi kwa ajili ya Pumba pekee
+// Historia ni read-only (hakuna edit/delete) - inaonekana tu ikibonyezwa "View History"
+function toggleMashineHistoryView() {
+    const container = document.getElementById('mashineMyExpenseRequestsHistoryContainer');
+    const btn = document.getElementById('toggleMashineHistoryBtn');
+    if (!container) return;
+    const inaonekana = container.style.display !== 'none';
+    if (inaonekana) {
+        container.style.display = 'none';
+        if (btn) btn.innerText = '👁️ View History';
+    } else {
+        renderMashineMyExpenseRequestsHistory();
+        container.style.display = 'block';
+        if (btn) btn.innerText = '🙈 Hide History';
+    }
+}
+
 function renderMashineMyExpenseRequestsHistory() {
     const container = document.getElementById('mashineMyExpenseRequestsHistoryContainer');
     if (!container) return;
@@ -2455,8 +2517,8 @@ function disburseMashineExpense(id) {
     if (!req) return;
 
     if (mashineBalance < req.gharama) {
-        alert(`❌ Salio la Mashine (Pumba) halitoshi kutoa TZS ${req.gharama.toLocaleString()}!`);
-        return;
+        const endelee = confirm(`⚠️ Salio la Mashine (Pumba) halitoshi (linasoma ${mashineBalance.toLocaleString()} TZS) kutoa TZS ${req.gharama.toLocaleString()}. Ukiendelea, salio litakuwa negative. Unataka kuendelea?`);
+        if (!endelee) return;
     }
 
     firestore.collection('hostel_mashine_matumizi').doc(id).update({ status_fedha: 'paid' })
@@ -3074,8 +3136,8 @@ function disburseHostelExpense(id) {
     if (!req) return;
 
     if (hostelBalance < req.gharama) {
-        alert(`❌ Salio la Hostel halitoshi kutoa TZS ${req.gharama.toLocaleString()}!`);
-        return;
+        const endelee = confirm(`⚠️ Salio la Hostel halitoshi (linasoma ${hostelBalance.toLocaleString()} TZS) kutoa TZS ${req.gharama.toLocaleString()}. Ukiendelea, salio litakuwa negative. Unataka kuendelea?`);
+        if (!endelee) return;
     }
 
     firestore.collection('hostel_matumizi').doc(id).update({ status_fedha: 'paid' })
