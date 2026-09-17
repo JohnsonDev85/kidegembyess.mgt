@@ -930,17 +930,17 @@
                 </div>
                 <div class="form-group" id="hostel-rimu-kiasi-wrapper" style="display:none;">
                     <label>Kiasi cha Fedha (TZS)</label>
-                    <input type="number" id="hostel-rimu-kiasi" min="0" placeholder="mfano: 5000">
+                    <input type="text" inputmode="numeric" id="hostel-rimu-kiasi" oninput="formatMoneyInput(this)" placeholder="mfano: 5,000">
                 </div>
                 <div class="form-group" id="hostel-rimu-namba-wrapper" style="display:none;">
                     <label>Kiasi cha Rimu</label>
                     <input type="text" id="hostel-rimu-namba" placeholder="mfano: 1, 2...">
                 </div>
-                <div class="form-group"><label>Ada ya Hostel (TZS)</label><input type="number" id="hostel-ada-hostel" required min="0"></div>
-                <div class="form-group"><label>Ada ya Taaluma (TZS)</label><input type="number" id="hostel-ada-taaluma" required min="0"></div>
-                <div class="form-group"><label>Mahindi (Debe)</label><input type="number" id="hostel-mahindi" required min="0"></div>
-                <div class="form-group"><label>Maharage (Debe)</label><input type="number" id="hostel-maharage" required min="0"></div>
-                <div class="form-group"><label>Mchele (Lita)</label><input type="number" id="hostel-mchele" required min="0"></div>
+                <div class="form-group"><label>Ada ya Hostel (TZS)</label><input type="text" inputmode="numeric" id="hostel-ada-hostel" oninput="formatMoneyInput(this)" required></div>
+                <div class="form-group"><label>Ada ya Taaluma (TZS)</label><input type="text" inputmode="numeric" id="hostel-ada-taaluma" oninput="formatMoneyInput(this)" required></div>
+                <div class="form-group"><label>Mahindi (Debe)</label><input type="number" id="hostel-mahindi" required min="0" step="any"></div>
+                <div class="form-group"><label>Maharage (Debe)</label><input type="number" id="hostel-maharage" required min="0" step="any"></div>
+                <div class="form-group"><label>Mchele (Lita)</label><input type="number" id="hostel-mchele" required min="0" step="any"></div>
                 <div class="form-group"><label>Tarehe</label><input type="date" id="hostel-tarehe" required></div>
             </div>
 
@@ -997,7 +997,7 @@
             <div class="form-grid">
                 <div class="form-group"><label>Tarehe</label><input type="date" id="mashine-tarehe" required></div>
                 <div class="form-group"><label>Kiasi cha Pumba (Debe/Kg)</label><input type="number" id="mashine-kiasi" min="0" step="0.1" oninput="updateMashineJumlaPreview()" required></div>
-                <div class="form-group"><label>Bei kwa Kipimo (TZS)</label><input type="number" id="mashine-bei" min="0" oninput="updateMashineJumlaPreview()" required></div>
+                <div class="form-group"><label>Bei kwa Kipimo (TZS)</label><input type="text" inputmode="numeric" id="mashine-bei" oninput="formatMoneyInput(this); updateMashineJumlaPreview();" required></div>
                 <div class="form-group"><label>Jumla ya Mauzo (TZS)</label><input type="text" id="mashine-jumla-preview" readonly value="0"></div>
             </div>
             <button type="submit" class="btn-submit" style="background-color:#0369a1;">Save Mauzo ya Mashine</button>
@@ -1012,7 +1012,7 @@
             <h4 style="margin-top:15px; color:#555;">Vitu Vinavyohitajika</h4>
             <div class="form-grid">
                 <div class="form-group"><label>Jina la Kitu</label><input type="text" id="mashine-exp-item-jina" placeholder="Mfano: Matengenezo ya Mashine"></div>
-                <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="number" id="mashine-exp-item-bei" min="0"></div>
+                <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="text" inputmode="numeric" id="mashine-exp-item-bei" oninput="formatMoneyInput(this)"></div>
                 <div class="form-group" style="justify-content:flex-end;">
                     <button type="button" onclick="addMashineExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">Add request</button>
                 </div>
@@ -1031,7 +1031,8 @@
 
         <div class="table-section" id="hostelMashineExpenseHistorySection" style="margin-top:20px; display:none;">
             <h3 style="color:#0369a1;">Historia ya Maombi ya Pumba</h3>
-            <div id="mashineMyExpenseRequestsHistoryContainer"></div>
+            <button type="button" id="toggleMashineHistoryBtn" onclick="toggleMashineHistoryView()" class="btn-submit" style="width:auto; padding:8px 16px; margin-top:0; background-color:#0369a1;">👁️ View History</button>
+            <div id="mashineMyExpenseRequestsHistoryContainer" style="display:none; margin-top:12px;"></div>
         </div>
 
         <form id="form-hostel-matumizi" class="project-form" onsubmit="submitHostelExpense(event)">
@@ -1050,7 +1051,7 @@
             <h4 style="margin-top:15px; color:#555;">Vitu Vinavyohitajika</h4>
             <div class="form-grid">
                 <div class="form-group"><label>Jina la Kitu</label><input type="text" id="hostel-exp-item-jina" placeholder="Mfano: Chakula, Umeme, Matengenezo n.k"></div>
-                <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="number" id="hostel-exp-item-bei" min="0"></div>
+                <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="text" inputmode="numeric" id="hostel-exp-item-bei" oninput="formatMoneyInput(this)"></div>
                 <div class="form-group" style="justify-content:flex-end;">
                     <button type="button" onclick="addHostelExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">+ Ongeza Kitu</button>
                 </div>
@@ -1064,7 +1065,8 @@
 
         <div class="table-section" id="hostelExpenseHistorySection" style="margin-top:20px;">
             <h3 style="color:var(--warning-color);">Historia ya Maombi ya Hostel</h3>
-            <div id="hostelMyExpenseRequestsHistoryContainer"></div>
+            <button type="button" id="toggleHostelExpenseHistoryBtn" onclick="toggleHostelExpenseHistoryView()" class="btn-submit" style="width:auto; padding:8px 16px; margin-top:0; background-color:var(--warning-color);">👁️ View History</button>
+            <div id="hostelMyExpenseRequestsHistoryContainer" style="display:none; margin-top:12px;"></div>
         </div>
     </div>
 
