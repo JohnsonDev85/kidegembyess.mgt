@@ -1752,6 +1752,8 @@ function clearWanafunziOrodhaKwaDarasa(darasa) {
 }
 
 // Inajaza dropdown ya jina la mwanafunzi kutegemeana na darasa lililochaguliwa
+// Inajenga hidden <select> (backing store) yenye wanafunzi wote wa darasa lililochaguliwa.
+// Uchujaji halisi unaofanyika mbele ya mtumiaji upo kwenye renderHostelStudentSearchList().
 function populateStudentDropdown() {
     const darasaSelect = document.getElementById('hostel-darasa');
     const select = document.getElementById('hostel-jina-mwanafunzi-select');
@@ -1759,33 +1761,73 @@ function populateStudentDropdown() {
     if (!darasaSelect || !select) return;
 
     const darasa = darasaSelect.value;
-    const searchTerm = (searchInput ? searchInput.value : '').trim().toLowerCase();
-
-    let list = wanafunziOrodha.filter(w => w.darasa === darasa).sort((a, b) => a.jina.localeCompare(b.jina));
-    if (searchTerm) {
-        list = list.filter(w => w.jina.toLowerCase().includes(searchTerm));
-    }
-
-    const previousValue = select.value;
+    const list = wanafunziOrodha.filter(w => w.darasa === darasa).sort((a, b) => a.jina.localeCompare(b.jina));
 
     select.innerHTML = `<option value="">-- Chagua Mwanafunzi --</option>` +
         list.map(w => `<option value="${w.id}">${w.jina}</option>`).join('') +
         `<option value="__OTHER__"> Jina Halipo - Andika Mwenyewe</option>`;
+    select.value = '';
 
-    // Kama mwanafunzi aliyekuwa amechaguliwa bado yupo kwenye orodha iliyochujwa, mchague tena
-    const bakiChaguliwa = previousValue && [...select.options].some(o => o.value === previousValue);
-    if (bakiChaguliwa) {
-        select.value = previousValue;
-    }
+    if (searchInput) searchInput.value = '';
+    hideHostelStudentSearchList();
 
     const manualWrapper = document.getElementById('hostel-jina-manual-wrapper');
     const manualInput = document.getElementById('hostel-jina-manual');
+    if (manualWrapper) manualWrapper.style.display = 'none';
+    if (manualInput) manualInput.value = '';
+
     const historyContainer = document.getElementById('studentHistoryContainer');
-    if (!bakiChaguliwa) {
-        if (manualWrapper) manualWrapper.style.display = 'none';
-        if (manualInput) manualInput.value = '';
-        if (historyContainer) historyContainer.style.display = 'none';
+    if (historyContainer) historyContainer.style.display = 'none';
+}
+
+// Inaonyesha list ya majina yanayolingana MOJA KWA MOJA chini ya box ya kutafuta -
+// inachuja hata kwa herufi moja tu, bila kusubiri lolote (data tayari ipo kwenye kifaa)
+function renderHostelStudentSearchList() {
+    const darasaSelect = document.getElementById('hostel-darasa');
+    const searchInput = document.getElementById('hostel-jina-search');
+    const listContainer = document.getElementById('hostelStudentSearchList');
+    if (!darasaSelect || !searchInput || !listContainer) return;
+
+    const darasa = darasaSelect.value;
+    const term = searchInput.value.trim().toLowerCase();
+
+    let list = wanafunziOrodha.filter(w => w.darasa === darasa);
+    if (term) list = list.filter(w => w.jina.toLowerCase().includes(term));
+    list = list.sort((a, b) => a.jina.localeCompare(b.jina)).slice(0, 100);
+
+    let html = list.map(w => `<div onmousedown="selectHostelStudentFromSearch('${w.id}', '${w.jina.replace(/'/g, "\\'")}')" style="padding:10px 12px; cursor:pointer; border-bottom:1px solid #eee;" onmouseover="this.style.background='#ecfdf5'" onmouseout="this.style.background='#fff'">${w.jina}</div>`).join('');
+
+    if (list.length === 0 && term) {
+        html = `<div style="padding:10px 12px; color:#999;">Hakuna jina linalofanana na "${searchInput.value}"</div>`;
     }
+
+    html += `<div onmousedown="selectHostelStudentFromSearch('__OTHER__', '')" style="padding:10px 12px; cursor:pointer; color:#0369a1; font-weight:bold;" onmouseover="this.style.background='#ecfdf5'" onmouseout="this.style.background='#fff'">➕ Jina Halipo - Andika Mwenyewe</div>`;
+
+    listContainer.innerHTML = html;
+    listContainer.style.display = 'block';
+}
+
+function hideHostelStudentSearchList() {
+    const listContainer = document.getElementById('hostelStudentSearchList');
+    if (listContainer) listContainer.style.display = 'none';
+}
+
+// Mtumiaji akibonyeza jina kwenye list iliyochujwa
+function selectHostelStudentFromSearch(id, jina) {
+    const select = document.getElementById('hostel-jina-mwanafunzi-select');
+    const searchInput = document.getElementById('hostel-jina-search');
+    if (!select) return;
+
+    if (![...select.options].some(o => o.value === id)) {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.text = jina;
+        select.appendChild(opt);
+    }
+    select.value = id;
+    if (searchInput) searchInput.value = id === '__OTHER__' ? '' : jina;
+    hideHostelStudentSearchList();
+    onHostelStudentSelected();
 }
 
 // Inaitwa mwanafunzi anapochaguliwa kwenye dropdown - inaonyesha historia ya malipo yake
@@ -1955,8 +1997,10 @@ function editHostelStudent(id) {
         select.value = '__OTHER__';
         if (manualWrapper) manualWrapper.style.display = 'block';
         document.getElementById('hostel-jina-manual').value = record.jina_mwanafunzi;
+        document.getElementById('hostel-jina-search').value = '';
     } else if (manualWrapper) {
         manualWrapper.style.display = 'none';
+        document.getElementById('hostel-jina-search').value = record.jina_mwanafunzi;
     }
 
     document.getElementById('hostel-muhula').value = record.muhula;
