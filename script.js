@@ -602,7 +602,7 @@ function toggleHosSupervisorsEdit() {
 // ===== SALES SUBMISSIONS =====
 function saveMaziwaSales(e) {
     e.preventDefault();
-    let p = parseFloat(document.getElementById('maziwa-p').value) || 0;
+    let p = getMoneyValue('maziwa-p');
     let record = {
         tarehe: document.getElementById('maziwa-t').value,
         msimamizi: supervisors.maziwa,
@@ -610,7 +610,7 @@ function saveMaziwaSales(e) {
         uzwa: parseFloat(document.getElementById('maziwa-uz').value) || 0,
         baki: (parseFloat(document.getElementById('maziwa-kam').value) || 0) - (parseFloat(document.getElementById('maziwa-uz').value) || 0),
         pesa: p,
-        mhasibu: parseFloat(document.getElementById('maziwa-mhasibu').value) || 0,
+        mhasibu: getMoneyValue('maziwa-mhasibu'),
         status_mhasibu: 'pending',
         matumizi_jina: "No any", matumizi_gharama: 0, faida: p
     };
@@ -621,13 +621,13 @@ function saveMaziwaSales(e) {
 
 function saveSaloonSales(e) {
     e.preventDefault();
-    let p = parseFloat(document.getElementById('saloon-p').value) || 0;
+    let p = getMoneyValue('saloon-p');
     let record = {
         tarehe: document.getElementById('saloon-t').value,
         msimamizi: supervisors.saloon,
         watu: parseInt(document.getElementById('saloon-w').value) || 0,
         pesa: p,
-        mhasibu: parseFloat(document.getElementById('saloon-mhasibu').value) || 0,
+        mhasibu: getMoneyValue('saloon-mhasibu'),
         status_mhasibu: 'pending',
         matumizi_jina: "No any", matumizi_gharama: 0, faida: p
     };
@@ -638,14 +638,14 @@ function saveSaloonSales(e) {
 
 function saveMgahawaSales(e) {
     e.preventDefault();
-    let mauzo = parseFloat(document.getElementById('mgahawa-p').value) || 0;
+    let mauzo = getMoneyValue('mgahawa-p');
     let record = {
         tarehe: document.getElementById('mgahawa-t').value,
         msimamizi: supervisors.mgahawa,
         vitu: "-",
         gharama: 0,
         mauzo: mauzo,
-        mhasibu: parseFloat(document.getElementById('mgahawa-mhasibu').value) || 0,
+        mhasibu: getMoneyValue('mgahawa-mhasibu'),
         status_mhasibu: 'pending',
         matumizi_jina: "No any", matumizi_gharama: 0, faida: mauzo
     };
@@ -656,14 +656,14 @@ function saveMgahawaSales(e) {
 
 function saveDukaSales(e) {
     e.preventDefault();
-    let mauzo = parseFloat(document.getElementById('duka-p').value) || 0;
+    let mauzo = getMoneyValue('duka-p');
     let record = {
         tarehe: document.getElementById('duka-t').value,
         msimamizi: supervisors.duka,
         vitu: "-",
         gharama: 0,
         mauzo: mauzo,
-        mhasibu: parseFloat(document.getElementById('duka-mhasibu').value) || 0,
+        mhasibu: getMoneyValue('duka-mhasibu'),
         status_mhasibu: 'pending',
         matumizi_jina: "No-any", matumizi_gharama: 0, faida: mauzo
     };
@@ -709,7 +709,7 @@ function addExpenseItem() {
     const jinaInput = document.getElementById('exp-item-jina');
     const beiInput = document.getElementById('exp-item-bei');
     const jina = jinaInput.value.trim();
-    const bei = parseFloat(beiInput.value) || 0;
+    const bei = getMoneyValue(beiInput);
 
     if (!jina) { alert("Andika jina la kitu kwanza!"); return; }
     if (bei <= 0) { alert("Weka bei ya kitu!"); return; }
@@ -781,6 +781,22 @@ function submitExpenseRequest(e) {
         renderExpenseItemsList();
         alert("Request has been successifully sent to Head of School!");
     }).catch(e => alert("Kosa: " + e.message));
+}
+
+// Historia ni read-only (hakuna edit/delete) - inaonekana tu ikibonyezwa "View History"
+function toggleMyExpenseHistoryView() {
+    const container = document.getElementById('myExpenseRequestsHistoryContainer');
+    const btn = document.getElementById('toggleMyExpenseHistoryBtn');
+    if (!container) return;
+    const inaonekana = container.style.display !== 'none';
+    if (inaonekana) {
+        container.style.display = 'none';
+        if (btn) btn.innerText = '👁️ View History';
+    } else {
+        renderMyExpenseRequestsHistory();
+        container.style.display = 'block';
+        if (btn) btn.innerText = '🙈 Hide History';
+    }
 }
 
 // Historia ya maombi ya Supervisor mwenyewe - inaonyesha mchanganuo wa vitu (Supervisor pekee)
@@ -953,7 +969,7 @@ function calculateAccountantBalances() {
 function transferSectionFunds() {
     const kutoka = document.getElementById('loan-kutoka').value;
     const kwenda = document.getElementById('loan-kwenda').value;
-    const kiasi = parseFloat(document.getElementById('loan-kiasi').value) || 0;
+    const kiasi = getMoneyValue('loan-kiasi');
 
     if (kutoka === kwenda) { alert("Chagua sections mbili tofauti!"); return; }
     if (kiasi <= 0) { alert("Weka kiasi sahihi cha kuhamisha!"); return; }
@@ -1739,22 +1755,37 @@ function clearWanafunziOrodhaKwaDarasa(darasa) {
 function populateStudentDropdown() {
     const darasaSelect = document.getElementById('hostel-darasa');
     const select = document.getElementById('hostel-jina-mwanafunzi-select');
+    const searchInput = document.getElementById('hostel-jina-search');
     if (!darasaSelect || !select) return;
 
     const darasa = darasaSelect.value;
-    const list = wanafunziOrodha.filter(w => w.darasa === darasa).sort((a, b) => a.jina.localeCompare(b.jina));
+    const searchTerm = (searchInput ? searchInput.value : '').trim().toLowerCase();
+
+    let list = wanafunziOrodha.filter(w => w.darasa === darasa).sort((a, b) => a.jina.localeCompare(b.jina));
+    if (searchTerm) {
+        list = list.filter(w => w.jina.toLowerCase().includes(searchTerm));
+    }
+
+    const previousValue = select.value;
 
     select.innerHTML = `<option value="">-- Chagua Mwanafunzi --</option>` +
         list.map(w => `<option value="${w.id}">${w.jina}</option>`).join('') +
         `<option value="__OTHER__"> Jina Halipo - Andika Mwenyewe</option>`;
 
+    // Kama mwanafunzi aliyekuwa amechaguliwa bado yupo kwenye orodha iliyochujwa, mchague tena
+    const bakiChaguliwa = previousValue && [...select.options].some(o => o.value === previousValue);
+    if (bakiChaguliwa) {
+        select.value = previousValue;
+    }
+
     const manualWrapper = document.getElementById('hostel-jina-manual-wrapper');
     const manualInput = document.getElementById('hostel-jina-manual');
-    if (manualWrapper) manualWrapper.style.display = 'none';
-    if (manualInput) manualInput.value = '';
-
     const historyContainer = document.getElementById('studentHistoryContainer');
-    if (historyContainer) historyContainer.style.display = 'none';
+    if (!bakiChaguliwa) {
+        if (manualWrapper) manualWrapper.style.display = 'none';
+        if (manualInput) manualInput.value = '';
+        if (historyContainer) historyContainer.style.display = 'none';
+    }
 }
 
 // Inaitwa mwanafunzi anapochaguliwa kwenye dropdown - inaonyesha historia ya malipo yake
@@ -3247,7 +3278,7 @@ function renderHodMazwaOdaTable() {
 function recordMazwaWatejaPayment() {
     const mtejaId = document.getElementById('acc-mteja-select').value;
     const mwezi = document.getElementById('acc-malipo-mwezi').value;
-    const kiasi = parseFloat(document.getElementById('acc-malipo-kiasi').value) || 0;
+    const kiasi = getMoneyValue('acc-malipo-kiasi');
     const tarehe = document.getElementById('acc-malipo-tarehe').value || new Date().toISOString().split('T')[0];
 
     if (!mtejaId) { alert("Chagua Jina la mteja"); return; }
