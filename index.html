@@ -122,7 +122,7 @@
                     </div>
                     <div class="form-group">
                         <label>Kiasi (TZS)</label>
-                        <input type="number" id="loan-kiasi" min="1">
+                        <input type="text" inputmode="numeric" id="loan-kiasi" oninput="formatMoneyInput(this)">
                     </div>
                     <div class="form-group" style="justify-content:flex-end;">
                         <button type="button" onclick="transferSectionFunds()" class="btn-submit" style="margin-top:0;">Hamisha Sasa</button>
@@ -197,7 +197,7 @@
                     </div>
                     <div class="form-group">
                         <label>Kiasi Kilicholipwa (TZS)</label>
-                        <input type="number" id="acc-malipo-kiasi" min="0">
+                        <input type="text" inputmode="numeric" id="acc-malipo-kiasi" oninput="formatMoneyInput(this)">
                     </div>
                     <div class="form-group">
                         <label>Tarehe ya Malipo</label>
@@ -736,8 +736,8 @@
                     <div class="form-group"><label>Msimamizi</label><input type="text" id="m-maziwa" readonly></div>
                     <div class="form-group"><label>Lita Zilizokamuliwa</label><input type="number" id="maziwa-kam" required min="0"></div>
                     <div class="form-group"><label>Lita Zilizouzwa</label><input type="number" id="maziwa-uz" required min="0"></div>
-                    <div class="form-group"><label>Pesa Zilizopatikana (TZS)</label><input type="number" id="maziwa-p" required min="0"></div>
-                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="number" id="maziwa-mhasibu" required min="0"></div>
+                    <div class="form-group"><label>Pesa Zilizopatikana (TZS)</label><input type="text" inputmode="numeric" id="maziwa-p" oninput="formatMoneyInput(this)" required></div>
+                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="text" inputmode="numeric" id="maziwa-mhasibu" oninput="formatMoneyInput(this)" required></div>
                 </div>
                 <button type="submit" class="btn-submit">Save Records!</button>
             </form>
@@ -748,8 +748,8 @@
                     <div class="form-group"><label>Tarehe</label><input type="date" id="saloon-t" required></div>
                     <div class="form-group"><label>Msimamizi</label><input type="text" id="m-saloon" readonly></div>
                     <div class="form-group"><label>Idadi ya Watu Walionyolewa</label><input type="number" id="saloon-w" required min="0"></div>
-                    <div class="form-group"><label>Pesa Iliyopatikana (TZS)</label><input type="number" id="saloon-p" required min="0"></div>
-                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="number" id="saloon-mhasibu" required min="0"></div>
+                    <div class="form-group"><label>Pesa Iliyopatikana (TZS)</label><input type="text" inputmode="numeric" id="saloon-p" oninput="formatMoneyInput(this)" required></div>
+                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="text" inputmode="numeric" id="saloon-mhasibu" oninput="formatMoneyInput(this)" required></div>
                 </div>
                 <button type="submit" class="btn-submit">Save Records!</button>
             </form>
@@ -759,8 +759,8 @@
                 <div class="form-grid">
                     <div class="form-group"><label>Tarehe</label><input type="date" id="mgahawa-t" required></div>
                     <div class="form-group"><label>Msimamizi</label><input type="text" id="m-mgahawa" readonly></div>
-                    <div class="form-group"><label>Mauzo ya Jumla (TZS)</label><input type="number" id="mgahawa-p" required min="0"></div>
-                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="number" id="mgahawa-mhasibu" required min="0"></div>
+                    <div class="form-group"><label>Mauzo ya Jumla (TZS)</label><input type="text" inputmode="numeric" id="mgahawa-p" oninput="formatMoneyInput(this)" required></div>
+                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="text" inputmode="numeric" id="mgahawa-mhasibu" oninput="formatMoneyInput(this)" required></div>
                 </div>
                 <button type="submit" class="btn-submit">Record Sales!</button>
             </form>
@@ -770,8 +770,8 @@
                 <div class="form-grid">
                     <div class="form-group"><label>Tarehe</label><input type="date" id="duka-t" required></div>
                     <div class="form-group"><label>Msimamizi</label><input type="text" id="m-duka" readonly></div>
-                    <div class="form-group"><label>Mauzo ya Jumla (TZS)</label><input type="number" id="duka-p" required min="0"></div>
-                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="number" id="duka-mhasibu" required min="0"></div>
+                    <div class="form-group"><label>Mauzo ya Jumla (TZS)</label><input type="text" inputmode="numeric" id="duka-p" oninput="formatMoneyInput(this)" required></div>
+                    <div class="form-group"><label>Kiasi Kilichowasilishwa kwa Mhasibu (TZS)</label><input type="text" inputmode="numeric" id="duka-mhasibu" oninput="formatMoneyInput(this)" required></div>
                 </div>
                 <button type="submit" class="btn-submit">Record Sales!</button>
             </form>
@@ -850,7 +850,7 @@
             <h4 style="margin-top:15px; color:#555;">Vitu Vinavyohitajika</h4>
             <div class="form-grid">
                 <div class="form-group"><label>Jina la Kitu</label><input type="text" id="exp-item-jina" placeholder="Mfano: Sukari"></div>
-                <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="number" id="exp-item-bei" min="0"></div>
+                <div class="form-group"><label>Bei ya Kitu (TZS)</label><input type="text" inputmode="numeric" id="exp-item-bei" oninput="formatMoneyInput(this)"></div>
                 <div class="form-group" style="justify-content:flex-end;">
                     <button type="button" onclick="addExpenseItem()" class="btn-submit" style="margin-top:0; background-color:#555;">Add request</button>
                 </div>
@@ -864,7 +864,8 @@
 
         <div class="table-section" style="margin-top:20px;">
             <h3 style="color: var(--warning-color);">Historia ya Maombi ya Matumizi</h3>
-            <div id="myExpenseRequestsHistoryContainer"></div>
+            <button type="button" id="toggleMyExpenseHistoryBtn" onclick="toggleMyExpenseHistoryView()" class="btn-submit" style="width:auto; padding:8px 16px; margin-top:0; background-color:var(--warning-color);">👁️ View History</button>
+            <div id="myExpenseRequestsHistoryContainer" style="display:none; margin-top:12px;"></div>
         </div>
     </div>
 
@@ -897,12 +898,16 @@
             <div class="form-grid">
                 <div class="form-group">
                     <label>Class</label>
-                    <select id="hostel-darasa" onchange="populateStudentDropdown()">
+                    <select id="hostel-darasa" onchange="document.getElementById('hostel-jina-search').value=''; populateStudentDropdown();">
                         <option value="Form 1">Form 1</option>
                         <option value="Form 2">Form 2</option>
                         <option value="Form 3">Form 3</option>
                         <option value="Form 4">Form 4</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label>Tafuta Mwanafunzi (Jina)</label>
+                    <input type="text" id="hostel-jina-search" placeholder="Andika jina la mwanafunzi..." oninput="populateStudentDropdown()">
                 </div>
                 <div class="form-group">
                     <label>Jina la Mwanafunzi</label>
@@ -938,9 +943,9 @@
                 </div>
                 <div class="form-group"><label>Ada ya Hostel (TZS)</label><input type="text" inputmode="numeric" id="hostel-ada-hostel" oninput="formatMoneyInput(this)" required></div>
                 <div class="form-group"><label>Ada ya Taaluma (TZS)</label><input type="text" inputmode="numeric" id="hostel-ada-taaluma" oninput="formatMoneyInput(this)" required></div>
-                <div class="form-group"><label>Mahindi (Debe)</label><input type="number" id="hostel-mahindi" required min="0" step="any"></div>
-                <div class="form-group"><label>Maharage (Debe)</label><input type="number" id="hostel-maharage" required min="0" step="any"></div>
-                <div class="form-group"><label>Mchele (Lita)</label><input type="number" id="hostel-mchele" required min="0" step="any"></div>
+                <div class="form-group"><label>Mahindi (Debe)</label><input type="number" id="hostel-mahindi" required min="0"></div>
+                <div class="form-group"><label>Maharage (Debe)</label><input type="number" id="hostel-maharage" required min="0"></div>
+                <div class="form-group"><label>Mchele (Lita)</label><input type="number" id="hostel-mchele" required min="0"></div>
                 <div class="form-group"><label>Tarehe</label><input type="date" id="hostel-tarehe" required></div>
             </div>
 
