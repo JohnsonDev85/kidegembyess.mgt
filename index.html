@@ -905,13 +905,14 @@
                         <option value="Form 4">Form 4</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <label>Tafuta Mwanafunzi (Jina)</label>
-                    <input type="text" id="hostel-jina-search" placeholder="Andika jina la mwanafunzi..." oninput="populateStudentDropdown()">
-                </div>
-                <div class="form-group">
+                <div class="form-group" style="position:relative;">
                     <label>Jina la Mwanafunzi</label>
-                    <select id="hostel-jina-mwanafunzi-select" onchange="onHostelStudentSelected()" required>
+                    <input type="text" id="hostel-jina-search" placeholder="Andika jina la mwanafunzi..." autocomplete="off"
+                        oninput="renderHostelStudentSearchList()"
+                        onfocus="renderHostelStudentSearchList()"
+                        onblur="setTimeout(hideHostelStudentSearchList, 200)">
+                    <div id="hostelStudentSearchList" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:50; background:#fff; border:1px solid #ccc; border-radius:0 0 8px 8px; max-height:240px; overflow-y:auto; box-shadow:0 6px 14px rgba(0,0,0,0.15);"></div>
+                    <select id="hostel-jina-mwanafunzi-select" onchange="onHostelStudentSelected()" required style="display:none;">
                         <option value="">-- Chagua Mwanafunzi --</option>
                     </select>
                 </div>
