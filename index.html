@@ -282,7 +282,10 @@
             </div>
 
             <div class="table-section" style="margin-bottom: 25px;">
-                <h3 style="color: var(--primary-color);">Malipo ya Wanafunzi Yanayosubiri Approval (Taaluma + Michango Mingine)</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                    <h3 style="color: var(--primary-color); margin:0;">Malipo ya Wanafunzi Yanayosubiri Approval (Taaluma + Michango Mingine)</h3>
+                    <button type="button" onclick="approveAllHostelPayments()" style="background:#27ae60; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer; font-weight:bold;">✅ Approve All</button>
+                </div>
                 <div class="data-table-container">
                     <table>
                         <thead>
@@ -944,9 +947,9 @@
                 </div>
                 <div class="form-group"><label>Ada ya Hostel (TZS)</label><input type="text" inputmode="numeric" id="hostel-ada-hostel" oninput="formatMoneyInput(this)" required></div>
                 <div class="form-group"><label>Ada ya Taaluma (TZS)</label><input type="text" inputmode="numeric" id="hostel-ada-taaluma" oninput="formatMoneyInput(this)" required></div>
-                <div class="form-group"><label>Mahindi (Debe)</label><input type="number" id="hostel-mahindi" required min="0"></div>
-                <div class="form-group"><label>Maharage (Debe)</label><input type="number" id="hostel-maharage" required min="0"></div>
-                <div class="form-group"><label>Mchele (Lita)</label><input type="number" id="hostel-mchele" required min="0"></div>
+                <div class="form-group"><label>Mahindi (Debe)</label><input type="number" id="hostel-mahindi" required min="0" step="any" inputmode="decimal"></div>
+                <div class="form-group"><label>Maharage (Debe)</label><input type="number" id="hostel-maharage" required min="0" step="any" inputmode="decimal"></div>
+                <div class="form-group"><label>Mchele (Lita)</label><input type="number" id="hostel-mchele" required min="0" step="any" inputmode="decimal"></div>
                 <div class="form-group"><label>Tarehe</label><input type="date" id="hostel-tarehe" required></div>
             </div>
 
