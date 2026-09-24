@@ -320,8 +320,11 @@ function startListeners() {
   // ===== HOSTEL MALIPO (malipo ya wanafunzi) =====
   // Inahitajika na: HOS, Mhasibu, Msimamizi wa Hostel
   if (role === 'hos' || role === 'accountant' || role === 'hostelmanager') {
-    firestore.collection('hostel_malipo').orderBy('tarehe', 'desc').onSnapshot(snapshot => {
-      hostelMalipo = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    firestore.collection('hostel_malipo').onSnapshot(snapshot => {
+      // Hakuna orderBy/limit hapa kwa makusudi: orderBy('tarehe') huficha rekodi zisizo na field ya 'tarehe',
+      // na limit() hukata rekodi za zamani. Tunapanga (sort) hapa kwenye kifaa badala yake.
+      hostelMalipo = snapshot.docs.map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => (b.tarehe || '').localeCompare(a.tarehe || ''));
 
       if (hostelMalipoInitialized) {
         snapshot.docChanges().forEach(change => {
