@@ -320,7 +320,7 @@ function startListeners() {
   // ===== HOSTEL MALIPO (malipo ya wanafunzi) =====
   // Inahitajika na: HOS, Mhasibu, Msimamizi wa Hostel
   if (role === 'hos' || role === 'accountant' || role === 'hostelmanager') {
-    firestore.collection('hostel_malipo').orderBy('tarehe', 'desc').limit(300).onSnapshot(snapshot => {
+    firestore.collection('hostel_malipo').orderBy('tarehe', 'desc').onSnapshot(snapshot => {
       hostelMalipo = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
 
       if (hostelMalipoInitialized) {
@@ -1793,7 +1793,7 @@ function renderHostelStudentSearchList() {
 
     let list = wanafunziOrodha.filter(w => w.darasa === darasa);
     if (term) list = list.filter(w => w.jina.toLowerCase().includes(term));
-    list = list.sort((a, b) => a.jina.localeCompare(b.jina)).slice(0, 100);
+    list = list.sort((a, b) => a.jina.localeCompare(b.jina));
 
     let html = list.map(w => `<div onmousedown="selectHostelStudentFromSearch('${w.id}', '${w.jina.replace(/'/g, "\\'")}')" style="padding:10px 12px; cursor:pointer; border-bottom:1px solid #eee;" onmouseover="this.style.background='#ecfdf5'" onmouseout="this.style.background='#fff'">${w.jina}</div>`).join('');
 
@@ -3204,6 +3204,37 @@ function approveHostelPayment(id) {
     firestore.collection('hostel_malipo').doc(id).update({ status_mhasibu: 'approved' })
       .then(() => alert("Malipo ya mwanafunzi yamethibitishwa!"))
       .catch(e => alert("Kosa: " + e.message));
+}
+
+// Inaidhinisha malipo YOTE ya wanafunzi yanayosubiri kwa mara moja (Approve All)
+function approveAllHostelPayments() {
+    const pending = hostelMalipo.filter(d => d.status_mhasibu === 'pending');
+    if (pending.length === 0) {
+        alert("Hakuna malipo yanayosubiri approval kwa sasa.");
+        return;
+    }
+
+    const endelee = confirm(`Una uhakika unataka ku-approve malipo YOTE ${pending.length} yanayosubiri?`);
+    if (!endelee) return;
+
+    // Firestore batch inaruhusu max 500 writes; tunagawa kwa vikundi vya 400 kama yatakuwa mengi zaidi
+    const chunks = [];
+    for (let i = 0; i < pending.length; i += 400) {
+        chunks.push(pending.slice(i, i + 400));
+    }
+
+    const runChunk = (index) => {
+        if (index >= chunks.length) {
+            alert(`Malipo ${pending.length} yameidhinishwa yote kikamilifu!`);
+            return;
+        }
+        const batch = firestore.batch();
+        chunks[index].forEach(d => {
+            batch.update(firestore.collection('hostel_malipo').doc(d.id), { status_mhasibu: 'approved' });
+        });
+        batch.commit().then(() => runChunk(index + 1)).catch(e => alert("Kosa: " + e.message));
+    };
+    runChunk(0);
 }
 
 function disburseHostelExpense(id) {
