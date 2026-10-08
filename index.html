@@ -841,9 +841,12 @@
         </div>
 
         <div id="mySalesHistorySection" style="display:none; margin-top:25px;">
-            <h3 class="section-title" style="margin-top:0;">Records Ulizotuma (Edit / Delete)</h3>
-            <p style="color:#666; font-size:0.85rem; margin-bottom:8px;">Unaweza kuhariri au kufuta record ambayo Mhasibu bado hajai-approve. Ikishaapproveiwa inafungwa.</p>
-            <div id="mySalesHistoryContainer"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+                <h3 class="section-title" style="margin-top:0; margin-bottom:0; border-bottom:none; padding-bottom:0;">Records Ulizotuma (Edit / Delete)</h3>
+                <button type="button" id="mySalesToggleBtn" onclick="toggleMySalesHistory()" style="background:#7f8c8d; color:white; border:none; padding:6px 14px; border-radius:4px; cursor:pointer; font-weight:bold; white-space:nowrap;">👁 Onyesha</button>
+            </div>
+            <p style="color:#666; font-size:0.85rem; margin:8px 0;">Unaweza kuhariri au kufuta record ambayo Mhasibu bado hajai-approve, au aliyoikataa. Ikishaapproveiwa inafungwa.</p>
+            <div id="mySalesHistoryContainer" style="display:none;"></div>
         </div>
 
         <form id="expense-request-form" class="project-form" onsubmit="submitExpenseRequest(event)">
@@ -1114,7 +1117,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="./script.js?v=12"></script>
+<script src="./script.js?v=13"></script>
 </div>
   </body>
 </html>
