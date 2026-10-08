@@ -731,6 +731,11 @@
             </div>
         </div>
 
+        <div id="salesEditBanner" style="display:none; background:#fff8e1; border-left:5px solid var(--warning-color); padding:10px 14px; border-radius:6px; margin-bottom:12px; font-weight:600;">
+            <span id="salesEditBannerText"></span>
+            <button type="button" onclick="exitSalesEditMode(true)" style="margin-left:10px; background:#7f8c8d; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">Cancel Edit</button>
+        </div>
+
         <div id="sales-forms-container">
             <form id="form-maziwa-sales" class="project-form active" onsubmit="saveMaziwaSales(event)">
                 <h3 style="color: var(--primary-color);">Maziwa: Sales</h3>
@@ -833,6 +838,12 @@
                 </div>
                 <button type="button" onclick="printMazwaWatejaMonthlyReport()" class="btn-submit" style="background-color:#8e44ad;"> Download bill ya Mteja</button>
             </form>
+        </div>
+
+        <div id="mySalesHistorySection" style="display:none; margin-top:25px;">
+            <h3 class="section-title" style="margin-top:0;">Records Ulizotuma (Edit / Delete)</h3>
+            <p style="color:#666; font-size:0.85rem; margin-bottom:8px;">Unaweza kuhariri au kufuta record ambayo Mhasibu bado hajai-approve. Ikishaapproveiwa inafungwa.</p>
+            <div id="mySalesHistoryContainer"></div>
         </div>
 
         <form id="expense-request-form" class="project-form" onsubmit="submitExpenseRequest(event)">
@@ -1103,7 +1114,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="./script.js?v=9"></script>
+<script src="./script.js?v=12"></script>
 </div>
   </body>
 </html>
