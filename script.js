@@ -292,6 +292,16 @@ function startListeners() {
     });
   }
 
+  // ===== RECORDS ZA MAUZO ZA SUPERVISOR (kwa ajili ya Edit/Delete) =====
+  if (role === 'supervisor') {
+    ['maziwa', 'saloon', 'mgahawa', 'duka'].forEach(section => {
+      firestore.collection(section).orderBy('tarehe', 'desc').limit(60).onSnapshot(snapshot => {
+        mySales[section] = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        renderMySalesHistory();
+      }, err => console.error('Kosa kupakia records za ' + section + ':', err.message));
+    });
+  }
+
   // ===== MAOMBI YA MATUMIZI (requests) =====
   // Inahitajika na: HOS (kuidhinisha), Mhasibu (kutoa fedha), Supervisor (historia yake mwenyewe)
   if (role === 'hos' || role === 'accountant' || role === 'supervisor') {
@@ -522,6 +532,8 @@ function toggleForm() {
     } else {
         document.getElementById(`form-${mradi}-sales`).classList.add('active');
     }
+    exitSalesEditMode(true);
+    renderMySalesHistory();
 }
 
 // ===== ROLE SWITCH + THEME =====
@@ -602,6 +614,158 @@ function toggleHosSupervisorsEdit() {
     if (display) display.style.display = inaonekana ? 'flex' : 'none';
 }
 
+// ===== EDIT / DELETE YA RECORDS ZA MAUZO (SUPERVISOR) =====
+let mySales = { maziwa: [], saloon: [], mgahawa: [], duka: [] };
+let editingSales = null; // { section, id }
+
+const SALES_EDIT_FIELDS = {
+    maziwa:  { date: 'maziwa-t',  num: [['maziwa-kam', 'kamuliwa'], ['maziwa-uz', 'uzwa']], money: [['maziwa-p', 'pesa'], ['maziwa-mhasibu', 'mhasibu']] },
+    saloon:  { date: 'saloon-t',  num: [['saloon-w', 'watu']],                               money: [['saloon-p', 'pesa'], ['saloon-mhasibu', 'mhasibu']] },
+    mgahawa: { date: 'mgahawa-t', num: [],                                                   money: [['mgahawa-p', 'mauzo'], ['mgahawa-mhasibu', 'mhasibu']] },
+    duka:    { date: 'duka-t',    num: [],                                                   money: [['duka-p', 'mauzo'], ['duka-mhasibu', 'mhasibu']] }
+};
+
+// Inahifadhi record mpya AU inasasisha record iliyopo (ikiwa uko kwenye edit mode).
+// Firestore huonyesha mabadiliko kwenye orodha papo hapo (local cache), kwa hiyo hatusubiri
+// seva ndipo tuufunge/tuusafishe fomu — hii ndiyo inayofanya iwe fast kwenye kureact.
+function commitSalesRecord(section, formId, record) {
+    if (!(editingSales && editingSales.section === section)) {
+        firestore.collection(section).add(record)
+          .catch(e => alert("Kosa: " + e.message + "\nRecord haijahifadhiwa, jaribu tena."));
+        saveAndRefresh(formId);
+        return;
+    }
+
+    const id = editingSales.id;
+    const old = (mySales[section] || []).find(x => x.id === id);
+    if (!old) { alert('Record hii haipo tena.'); exitSalesEditMode(true); return; }
+    if (old.status_mhasibu !== 'pending' && old.status_mhasibu !== 'rejected') {
+        alert('Mhasibu ameshaapprove record hii, haiwezi kuhaririwa tena.');
+        exitSalesEditMode(true);
+        return;
+    }
+
+    // Vitu ambavyo havibadiliki wakati wa kuhariri
+    ['msimamizi', 'matumizi_jina', 'matumizi_gharama', 'vitu', 'gharama'].forEach(k => delete record[k]);
+    const revenue = record.pesa !== undefined ? record.pesa : record.mauzo;
+    record.faida = (revenue || 0) - (old.matumizi_gharama || 0);
+    // Ikiwa ilikataliwa, kuihariri na kuituma tena kunairudisha "pending" kwa Mhasibu aiangalie upya.
+    record.status_mhasibu = 'pending';
+    record.rejection_reason = firebase.firestore.FieldValue.delete();
+
+    firestore.collection(section).doc(id).update(record)
+      .catch(e => alert("Kosa: " + e.message + "\nMabadiliko hayajahifadhiwa, jaribu tena."));
+    saveAndRefresh(formId);
+    exitSalesEditMode(false);
+}
+
+function startEditSalesRecord(section, id) {
+    const d = (mySales[section] || []).find(x => x.id === id);
+    if (!d) return;
+    if (d.status_mhasibu !== 'pending' && d.status_mhasibu !== 'rejected') {
+        alert('Mhasibu ameshaapprove record hii, haiwezi kuhaririwa tena.');
+        return;
+    }
+
+    // Hakikisha section na Record Sales zimechaguliwa (hii inaita toggleForm, inayotoka kwenye edit mode)
+    document.getElementById('mradiSelect').value = section;
+    document.getElementById('infoTypeSelect').value = 'sales';
+    toggleForm();
+
+    const cfg = SALES_EDIT_FIELDS[section];
+    document.getElementById(cfg.date).value = d.tarehe || '';
+    cfg.num.forEach(([inputId, key]) => { document.getElementById(inputId).value = d[key] ?? ''; });
+    cfg.money.forEach(([inputId, key]) => setMoneyValue(inputId, d[key]));
+
+    editingSales = { section, id };
+    const form = document.getElementById(`form-${section}-sales`);
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.dataset.originalText = btn.innerText;
+        btn.innerText = 'Update Record';
+    }
+    const banner = document.getElementById('salesEditBanner');
+    document.getElementById('salesEditBannerText').innerText = `✏️ Unahariri record ya ${d.tarehe} (${section}). Rekebisha kisha bonyeza "Update Record".`;
+    banner.style.display = 'block';
+    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    renderMySalesHistory();
+}
+
+function exitSalesEditMode(resetForm) {
+    if (!editingSales) return;
+    const form = document.getElementById(`form-${editingSales.section}-sales`);
+    if (form) {
+        const btn = form.querySelector('button[type="submit"]');
+        if (btn && btn.dataset.originalText) btn.innerText = btn.dataset.originalText;
+        if (resetForm) { form.reset(); loadSupervisors(); }
+    }
+    editingSales = null;
+    const banner = document.getElementById('salesEditBanner');
+    if (banner) banner.style.display = 'none';
+    renderMySalesHistory();
+}
+
+function deleteMySalesRecord(section, id) {
+    const d = (mySales[section] || []).find(x => x.id === id);
+    if (d && d.status_mhasibu !== 'pending' && d.status_mhasibu !== 'rejected') {
+        alert('Mhasibu ameshaapprove record hii, haiwezi kufutwa.');
+        return;
+    }
+    if (!confirm('Una uhakika unataka kufuta record hii? Haiwezi kurudishwa!')) return;
+    if (editingSales && editingSales.id === id) exitSalesEditMode(true);
+    firestore.collection(section).doc(id).delete()
+      .catch(e => alert('Kosa: ' + e.message));
+}
+
+function renderMySalesHistory() {
+    const wrap = document.getElementById('mySalesHistorySection');
+    const container = document.getElementById('mySalesHistoryContainer');
+    if (!wrap || !container) return;
+
+    const section = document.getElementById('mradiSelect').value;
+    const type = document.getElementById('infoTypeSelect').value;
+    if (type !== 'sales') { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+
+    const list = mySales[section] || [];
+    if (list.length === 0) {
+        container.innerHTML = '<p style="color:#999; text-align:center; padding:15px;">Hakuna records bado.</p>';
+        return;
+    }
+
+    const n = (v) => (v || 0).toLocaleString();
+    const details = (d) => {
+        if (section === 'maziwa')  return `Kamuliwa: <b>${d.kamuliwa ?? 0}</b> L · Uzwa: <b>${d.uzwa ?? 0}</b> L · Pesa: <b>${n(d.pesa)}</b> · Mhasibu: <b>${n(d.mhasibu)}</b>`;
+        if (section === 'saloon')  return `Watu: <b>${d.watu ?? 0}</b> · Pesa: <b>${n(d.pesa)}</b> · Mhasibu: <b>${n(d.mhasibu)}</b>`;
+        return `Mauzo: <b>${n(d.mauzo)}</b> · Mhasibu: <b>${n(d.mhasibu)}</b>`;
+    };
+
+    container.innerHTML = list.map(d => {
+        const editable = d.status_mhasibu === 'pending' || d.status_mhasibu === 'rejected';
+        const rejected = d.status_mhasibu === 'rejected';
+        const isEditing = editingSales && editingSales.id === d.id;
+        const status = rejected
+            ? '<span style="color:#c0392b; font-weight:bold;">Rejected ❌</span>'
+            : (d.status_mhasibu === 'pending'
+                ? '<span style="color:#e67e22; font-weight:bold;">Pending</span>'
+                : '<span style="color:green; font-weight:bold;">Approved 🔒</span>');
+        const reasonLine = rejected
+            ? `<div style="margin-top:6px; font-size:0.85rem; background:#fdecea; color:#c0392b; padding:8px; border-radius:4px;"><b>Sababu ya Mhasibu:</b> ${d.rejection_reason || 'Haikuelezwa sababu'}</div>`
+            : '';
+        const buttons = editable ? `
+            <button type="button" onclick="startEditSalesRecord('${section}','${d.id}')" style="background:#2980b9; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">✏️ Edit</button>
+            <button type="button" onclick="deleteMySalesRecord('${section}','${d.id}')" style="background:#c0392b; color:white; border:none; padding:6px 12px; border-radius:4px; cursor:pointer; font-weight:bold;">🗑 Delete</button>` : '';
+        return `<div style="margin-top:10px; background:#fff; border-left:5px solid ${isEditing ? '#2980b9' : (rejected ? '#c0392b' : 'var(--secondary-color)')}; border-radius:6px; box-shadow:0 2px 5px rgba(0,0,0,0.05); padding:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                <strong>${d.tarehe || '-'}</strong>${status}
+            </div>
+            <div style="margin-top:6px; font-size:0.9rem;">${details(d)}</div>
+            ${reasonLine}
+            ${buttons ? `<div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">${buttons}</div>` : ''}
+        </div>`;
+    }).join('');
+}
+
 // ===== SALES SUBMISSIONS =====
 function saveMaziwaSales(e) {
     e.preventDefault();
@@ -617,9 +781,7 @@ function saveMaziwaSales(e) {
         status_mhasibu: 'pending',
         matumizi_jina: "No any", matumizi_gharama: 0, faida: p
     };
-    firestore.collection('maziwa').add(record)
-      .then(() => saveAndRefresh('form-maziwa-sales'))
-      .catch(e => alert("Kosa: " + e.message));
+    commitSalesRecord('maziwa', 'form-maziwa-sales', record);
 }
 
 function saveSaloonSales(e) {
@@ -634,9 +796,7 @@ function saveSaloonSales(e) {
         status_mhasibu: 'pending',
         matumizi_jina: "No any", matumizi_gharama: 0, faida: p
     };
-    firestore.collection('saloon').add(record)
-      .then(() => saveAndRefresh('form-saloon-sales'))
-      .catch(e => alert("Kosa: " + e.message));
+    commitSalesRecord('saloon', 'form-saloon-sales', record);
 }
 
 function saveMgahawaSales(e) {
@@ -652,9 +812,7 @@ function saveMgahawaSales(e) {
         status_mhasibu: 'pending',
         matumizi_jina: "No any", matumizi_gharama: 0, faida: mauzo
     };
-    firestore.collection('mgahawa').add(record)
-      .then(() => saveAndRefresh('form-mgahawa-sales'))
-      .catch(e => alert("Kosa: " + e.message));
+    commitSalesRecord('mgahawa', 'form-mgahawa-sales', record);
 }
 
 function saveDukaSales(e) {
@@ -670,9 +828,7 @@ function saveDukaSales(e) {
         status_mhasibu: 'pending',
         matumizi_jina: "No-any", matumizi_gharama: 0, faida: mauzo
     };
-    firestore.collection('duka').add(record)
-      .then(() => saveAndRefresh('form-duka-sales'))
-      .catch(e => alert("Kosa: " + e.message));
+    commitSalesRecord('duka', 'form-duka-sales', record);
 }
 
 function loadSupervisors() {
@@ -1060,7 +1216,8 @@ function renderAccountantDashboard() {
                         <td style="color:#27ae60; font-weight:bold;">${d.mhasibu.toLocaleString()} TZS</td>
                         <td>Msimamizi: ${d.msimamizi}</td>
                         <td>
-                            <button onclick="approveCollection('${section}', '${d.id}')" style="background:#27ae60; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;"> Approve</button>
+                            <button onclick="approveCollection('${section}', '${d.id}')" style="background:#27ae60; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:6px;"> Approve</button>
+                            <button onclick="rejectCollection('${section}', '${d.id}')" style="background:#c0392b; color:white; border:none; padding:5px 12px; border-radius:4px; cursor:pointer; font-weight:bold;"> Reject</button>
                         </td>
                     </tr>`;
             });
@@ -1088,11 +1245,27 @@ function renderAccountantDashboard() {
 
 function approveCollection(section, id) {
     const record = db[section].find(d => d.id === id);
-    firestore.collection(section).doc(id).update({ status_mhasibu: 'approved' })
+    firestore.collection(section).doc(id).update({
+        status_mhasibu: 'approved',
+        rejection_reason: firebase.firestore.FieldValue.delete()
+    })
     .then(() => {
         alert("Mapato yamethibitishwa na kuingizwa kwenye salio la mradi!");
         if (record) autoSettleSectionLoans(section, record.mhasibu || 0);
     })
+    .catch(e => alert("Kosa: " + e.message));
+}
+
+// Mhasibu anakataa kiasi alichotuma supervisor (mfano: kimeandikwa vibaya, halilingani na fedha halisi).
+// Record haifutwi — inarudi kwa supervisor akiwa na sababu, ili aihariri au aifute.
+function rejectCollection(section, id) {
+    const sababu = prompt("Andika sababu ya kukataa (itaonekana kwa msimamizi):");
+    if (sababu === null) return; // amesitisha
+    firestore.collection(section).doc(id).update({
+        status_mhasibu: 'rejected',
+        rejection_reason: sababu.trim() || 'Haikuelezwa sababu'
+    })
+    .then(() => alert("Record imerejeshwa kwa msimamizi akiwa na sababu ya kukataliwa."))
     .catch(e => alert("Kosa: " + e.message));
 }
 
