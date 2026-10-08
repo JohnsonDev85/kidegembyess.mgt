@@ -717,6 +717,16 @@ function deleteMySalesRecord(section, id) {
       .catch(e => alert('Kosa: ' + e.message));
 }
 
+// Inaficha/kuonyesha orodha ya "Records Ulizotuma" ili ukurasa ubaki rahisi kuona.
+function toggleMySalesHistory() {
+    const container = document.getElementById('mySalesHistoryContainer');
+    const btn = document.getElementById('mySalesToggleBtn');
+    if (!container || !btn) return;
+    const showing = container.style.display !== 'none';
+    container.style.display = showing ? 'none' : 'block';
+    btn.innerText = showing ? '👁 Onyesha' : '🙈 Ficha';
+}
+
 function renderMySalesHistory() {
     const wrap = document.getElementById('mySalesHistorySection');
     const container = document.getElementById('mySalesHistoryContainer');
